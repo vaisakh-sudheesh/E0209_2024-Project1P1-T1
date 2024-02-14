@@ -15,7 +15,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 @RestController
@@ -27,12 +26,6 @@ public class BookingController {
     private ShowRepository showRepository;
     @Autowired
     private BookingRepository bookingRepository;
-
-    // Since each of the microservices in this project have separate in-memory database entities,
-    // interaction between these microservices need to be done over HTTP/Rest request.
-    // URIs for the doing the same.
-    final String usercheck_uri = "http://localhost:8080/users/{user_id}";
-    final String walletaction_uri = "http://localhost:8082/wallets/{user_id}";
 
 
     /**
@@ -68,8 +61,9 @@ public class BookingController {
     ResponseEntity<?> getShowsTheatres(@RequestParam Integer theater_id) {
         if (this.theatreRepository.existsById(theater_id)) {
             // Check for validity of provided theatre_id
-            List<Show> theatres = this.showRepository.findByTheatre_id(theater_id);
-            return ResponseEntity.ok(theatres);
+            List<Show> shows = this.showRepository.findByTheatre_id(theater_id);
+            //System.out.println("getShowsTheatres: "+ shows.toString());
+            return ResponseEntity.ok(shows);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -91,6 +85,7 @@ public class BookingController {
         if (this.showRepository.existsById(show_id)) {
             // Check for validity of show_id prior to fetching details
             Show show = this.showRepository.findByShowId(show_id);
+            //System.out.println("getShowsTheatres: "+ show.toString());
             return ResponseEntity.ok(show);
         } else{
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -148,7 +143,11 @@ public class BookingController {
         // Check if the user_id is a valid one by RestAPI call to User service
         try {
             RestTemplate restTemplate = new RestTemplate();
-            String result = restTemplate.getForObject(usercheck_uri, String.class, bookingreq.getUser_id());
+            // Since each of the microservices in this project have separate in-memory database entities,
+            // interaction between these microservices need to be done over HTTP/Rest request.
+            // URIs for the doing the same.
+            String user_check_uri = "http://localhost:8080/users/{user_id}";
+            String result = restTemplate.getForObject(user_check_uri, String.class, bookingreq.getUser_id());
             System.out.println("User check passed"+result );
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().is4xxClientError()) {
@@ -158,50 +157,33 @@ public class BookingController {
         }
 
         // Check for availability of seat
-        Show showdetails = this.showRepository.findByShowId(bookingreq.getShow_id());
-        if (showdetails.getSeats_available() < bookingreq.getSeats_booked()) {
-            System.out.println("Not enough seats available"+showdetails.getSeats_available()+" for a request of "+bookingreq.getSeats_booked());
+        Show show_details = this.showRepository.findByShowId(bookingreq.getShow_id());
+        if (show_details.getSeats_available() < bookingreq.getSeats_booked()) {
+            System.out.println("Not enough seats available"+show_details.getSeats_available()+" for a request of "+bookingreq.getSeats_booked());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        //// TODO/BUG: Handle 0 booking request case
-        // Wallet transaction
-        try {
-            System.out.println("Initiating wallet transaction...");
-            Integer ticketcost = bookingreq.getSeats_booked() * showdetails.getPrice();
-            RestTemplate restTemplate = new RestTemplate();
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("action", "debit");
-            requestBody.put("amount", ticketcost);
-
-            // Create an HttpEntity object with the request body and headers
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-            // Define URI variables for the user ID
-            Map<String, String> uriVariables = new HashMap<>();
-            uriVariables.put("user_id", bookingreq.getUser_id().toString());
-
-            // Make the PUT request
-            ResponseEntity<String> response = restTemplate.exchange(walletaction_uri, HttpMethod.PUT, entity, String.class, uriVariables);
-
-            // Update Booking table for the successful booking
-            this.bookingRepository.save(new Booking(showdetails, bookingreq.getUser_id(), bookingreq.getSeats_booked()));
-
-            // Update available seat counter
-            showdetails.setSeats_available(showdetails.getSeats_available() - bookingreq.getSeats_booked());
-            this.showRepository.save(showdetails);
-
-        } catch(HttpClientErrorException e) {
-            System.out.println("Wallet transaction failed with "+ e.getStatusCode());
+        //// Special case handling: Handle 0 booking request case
+        if (bookingreq.getSeats_booked() <= 0 ) {
+            System.out.println("Attempting to book for zero or negative number of seats -  "+bookingreq.getSeats_booked());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+
+        // Perform wallet transaction
+        Integer ticket_cost = bookingreq.getSeats_booked() * show_details.getPrice();
+        if (!this.WalletTransaction(bookingreq.getUser_id(), true, ticket_cost)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        // Update Booking table for the successful booking
+        this.bookingRepository.save(new Booking(show_details, bookingreq.getUser_id(), bookingreq.getSeats_booked()));
+
+        // Update available seat counter
+        show_details.setSeats_available(show_details.getSeats_available() - bookingreq.getSeats_booked());
+        this.showRepository.save(show_details);
+
         return new ResponseEntity<>(HttpStatus.OK);
-
     }
-
 
     /**
      * Endpoint Requirement:
@@ -241,47 +223,31 @@ public class BookingController {
         }
         // Now handle the case of return of seats and refund
         List<Booking> bookings = this.bookingRepository.findAllByUser_idAndShow_id(user_id, show_id);
+
+        // Process each booking and perform refunds and return of seats
         for (Booking booking : bookings) {
             Integer seats_booked = booking.getSeats_booked();
 
-            Show showinfo = this.showRepository.findByShowId(show_id);
+            Show showinfo = this.showRepository.findByShowId(booking.getShow_id().getId());
             Integer refund_amount = seats_booked * showinfo.getPrice();
 
             // Return the booking amount to the wallet.
-            // Wallet transaction
-            try {
-                System.out.println("Initiating wallet refund transaction...");
-                RestTemplate restTemplate = new RestTemplate();
-
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-
-                Map<String, Object> requestBody = new HashMap<>();
-                requestBody.put("action", "credit");
-                requestBody.put("amount", refund_amount);
-
-                // Create an HttpEntity object with the request body and headers
-                HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-                // Define URI variables for the user ID
-                Map<String, String> uriVariables = new HashMap<>();
-                uriVariables.put("user_id", user_id.toString());
-
-                // Make the PUT request
-                ResponseEntity<String> response = restTemplate.exchange(walletaction_uri, HttpMethod.PUT, entity, String.class, uriVariables);
-
-            } catch (HttpClientErrorException e) {
-                System.out.println("Wallet transaction failed with " + e.getStatusCode());
+            if (!this.WalletTransaction(user_id, false, refund_amount)) {
+                /*
+                 * TODO/BUG: Failure point here, in case one of the transaction failed, it will prevent removal of rows.
+                 *  Fix it by removing each row on successful completion rather than failing in between.
+                 */
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
+
             // Return seats corresponding to these bookings to the available pool of show
             showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
             this.showRepository.save(showinfo);
         }
+
         this.bookingRepository.deleteAllByUser_idAndShow_id(user_id, show_id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
-
 
     /**
      * Endpoint Requirement:
@@ -301,4 +267,48 @@ public class BookingController {
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    /**
+     * Utility method for performing booking refund operation
+     * It performs:
+     *   - Wallet Credit of amount
+     *   - Returning cancelled seats to system.
+     * @param user_id_ user id to which wallet transaction is to be performed.
+     * @return True on successful completion, false in case of any failure in wallet transactions.
+     */
+    boolean WalletTransaction(Integer user_id_ , boolean isDebit, Integer amount) {
+        // Wallet transaction
+        try {
+            System.out.println("Initiating wallet refund transaction...");
+            RestTemplate restTemplate = new RestTemplate();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("action", isDebit ? "debit":"credit");
+            requestBody.put("amount", amount);
+
+            // Create an HttpEntity object with the request body and headers
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+            // Define URI variables for the user ID
+            Map<String, String> uriVariables = new HashMap<>();
+            uriVariables.put("user_id", user_id_.toString());
+
+            // Make the HTTP/PUT request
+            String walletaction_uri = "http://localhost:8082/wallets/{user_id}";
+            ResponseEntity<String> response = restTemplate.exchange(walletaction_uri, HttpMethod.PUT, entity, String.class, uriVariables);
+
+            if (response.getStatusCode().is2xxSuccessful())
+                return true;
+
+        } catch (HttpClientErrorException e) {
+            System.out.println("Wallet transaction failed with " + e.getStatusCode());
+            return false;
+        }
+        return false;
+    }
+
+
 }
