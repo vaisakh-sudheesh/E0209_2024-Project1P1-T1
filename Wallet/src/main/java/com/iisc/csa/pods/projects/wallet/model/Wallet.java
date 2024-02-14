@@ -1,3 +1,6 @@
+/**
+ * Model for Wallet JPA entity
+ */
 package com.iisc.csa.pods.projects.wallet.model;
 
 import jakarta.persistence.Column;

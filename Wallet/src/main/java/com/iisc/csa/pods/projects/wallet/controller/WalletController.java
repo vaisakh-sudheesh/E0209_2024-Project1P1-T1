@@ -1,8 +1,6 @@
 /**
  * Controller class for Wallet Service
  *
- * @author Vaisakh P S <vaisakhp@iisc.ac.in>
- *
  */
 package com.iisc.csa.pods.projects.wallet.controller;
 
@@ -23,9 +21,8 @@ public class WalletController {
 
     /**
      * Endpoint for GET /wallets/{user_id}
-     *
+     * Endpoint requirement
      * <p>
-     * Requirement specification:
      *    GET /wallets/{user_id}
      *    This endpoint gets the wallet details for the user with ID user_id.
      *    Response JSON payload is {“user_id:” Integer, “balance”: Integer} with HTTP status
@@ -34,10 +31,11 @@ public class WalletController {
      * </p>
      *
      * @param user_id user_id for associated wallet.
-     * @return JSON Payload with user information as stated in requirement.
+     * @return JSON Payload with user information as stated in requirement and HTTP status code 200 (OK) on success.
+     *         HTTP status code 404 (Not Found), if wallet is not present for user.
      */
     @GetMapping("/{user_id}")
-    public ResponseEntity<Wallet> getController(@PathVariable Integer user_id){
+    public ResponseEntity<Wallet> getUser_id(@PathVariable Integer user_id){
         try {
             if (walletRepo.existsByUser_id(user_id)) {
                 Wallet wallet_data = walletRepo.findByUser_id(user_id);
@@ -52,7 +50,7 @@ public class WalletController {
 
     /**
      * Endpoint method for PUT /wallets/{user_id}
-     *
+     * Endpoint requirement
      * <p>
      * PUT /wallets/{user_id}
      *    Request JSON payload of the form {“action”: “debit”/“credit”, "amount": Integer}
@@ -66,10 +64,10 @@ public class WalletController {
      * </p>
      * @param payload Payload of WalletPutPayload type to share action(debit/credit) and amount
      * @param user_id user_id for associated wallet.
-     * @return
+     * @return HTTP status code 200 (OK) on success and 400(Bad Request) on insufficient wallet balance.
      */
     @PutMapping("/{user_id}")
-    public ResponseEntity<Wallet> putController(@RequestBody WalletPutPayload payload, @PathVariable Integer user_id) {
+    public ResponseEntity<Wallet> putUser_id(@RequestBody WalletPutPayload payload, @PathVariable Integer user_id) {
         try {
             /*
              * TODO: Should we do a cross check for whether a valid user_id is being passed as argument?
@@ -107,17 +105,18 @@ public class WalletController {
 
     /**
      * Endpoint method for DELETE /wallets/{user_id}
+     * Endpoint requirement:
      * <p>
      *     DELETE /wallets/{user_id}
      *       Deletes the wallet of the user with ID user_id.
      *       Upon successful deletion send a HTTP status code 200 (OK).
      *       If the user does not have a wallet, return an HTTP status code 404 (Not Found).
      * </p>
-     * @param user_id
-     * @return
+     * @param user_id User identifier for associated wallet.
+     * @return HTTP status code 200 (OK) on success and 404(Not Found) on no existing wallet.
      */
     @DeleteMapping("/{user_id}")
-    public ResponseEntity<?> deleteController(@PathVariable Integer user_id) {
+    public ResponseEntity<?> deleteUser_id(@PathVariable Integer user_id) {
         try {
             if (!this.walletRepo.existsByUser_id(user_id)){
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -132,14 +131,15 @@ public class WalletController {
 
     /**
      * Endpoint method for DELETE /wallets
+     * Endpoint requirements:
      * <p>
      *     DELETE /wallets
      *       This endpoint deletes the wallets of all users, and returns HTTP status code 200 (OK).
      * </p>
-     * @return
+     * @return return HTTP status code 200 (OK) always
      */
     @DeleteMapping()
-    public ResponseEntity<?> deleteController() {
+    public ResponseEntity<?> deleteAll() {
         this.walletRepo.deleteAll();
         return new ResponseEntity<>(HttpStatus.OK);
     }
