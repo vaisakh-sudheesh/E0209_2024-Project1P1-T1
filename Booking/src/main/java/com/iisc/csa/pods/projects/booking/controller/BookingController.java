@@ -28,7 +28,7 @@ public class BookingController {
     @Autowired
     private BookingRepository bookingRepository;
 
-    // Since User and Wallet microservices have separate in-memory database entities,
+    // Since each of the microservices in this project have separate in-memory database entities,
     // interaction between these microservices need to be done over HTTP/Rest request.
     // URIs for the doing the same.
     final String usercheck_uri = "http://localhost:8080/users/{user_id}";
@@ -67,6 +67,7 @@ public class BookingController {
     @GetMapping("/shows/theatres/{theatre_id}")
     ResponseEntity<?> getShowsTheatres(@RequestParam Integer theater_id) {
         if (this.theatreRepository.existsById(theater_id)) {
+            // Check for validity of provided theatre_id
             List<Show> theatres = this.showRepository.findByTheatre_id(theater_id);
             return ResponseEntity.ok(theatres);
         } else {
@@ -88,6 +89,7 @@ public class BookingController {
     @GetMapping("/shows/{show_id}")
     ResponseEntity<?> getShows(@RequestParam Integer show_id) {
         if (this.showRepository.existsById(show_id)) {
+            // Check for validity of show_id prior to fetching details
             Show show = this.showRepository.findByShowId(show_id);
             return ResponseEntity.ok(show);
         } else{
