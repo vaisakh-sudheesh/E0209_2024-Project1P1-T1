@@ -58,7 +58,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @GetMapping("/shows/theatres/{theatre_id}")
-    ResponseEntity<?> getShowsTheatres(@RequestParam Integer theater_id) {
+    ResponseEntity<?> getShowsTheatres(@PathVariable Integer theater_id) {
         if (this.theatreRepository.existsById(theater_id)) {
             // Check for validity of provided theatre_id
             List<Show> shows = this.showRepository.findByTheatre_id(theater_id);
@@ -81,7 +81,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @GetMapping("/shows/{show_id}")
-    ResponseEntity<?> getShows(@RequestParam Integer show_id) {
+    ResponseEntity<?> getShows(@PathVariable Integer show_id) {
         if (this.showRepository.existsById(show_id)) {
             // Check for validity of show_id prior to fetching details
             Show show = this.showRepository.findByShowId(show_id);
@@ -104,7 +104,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @GetMapping("/bookings/users/{user_id}")
-    ResponseEntity<?> getBookingsUsers(@RequestParam Integer user_id) {
+    ResponseEntity<?> getBookingsUsers(@PathVariable Integer user_id) {
         List<Booking> bookings = this.bookingRepository.findByUser_id(user_id);
         return ResponseEntity.ok(bookings);
     }
@@ -199,7 +199,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @DeleteMapping("/bookings/users/{user_id}")
-    ResponseEntity<?> deleteUsers(@RequestParam Integer user_id) {
+    ResponseEntity<?> deleteUsers(@PathVariable Integer user_id) {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -217,7 +217,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @DeleteMapping("/bookings/users/{user_id}/shows/{show_id}")
-    ResponseEntity<?> deleteUsersShows(@RequestParam Integer user_id, @RequestParam Integer show_id) {
+    ResponseEntity<?> deleteUsersShows(@PathVariable Integer user_id, @PathVariable Integer show_id) {
         if (!this.bookingRepository.existsByUser_idAndShow_id(user_id, show_id)){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
