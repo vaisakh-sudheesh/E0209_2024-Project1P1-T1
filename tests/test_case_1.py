@@ -95,7 +95,7 @@ def test_get_wallet(user_id, response):
     user_res = requests.get(userServiceURL + f"/users/{user_id}")
 
     if(user_res.status_code != 404 and response.status_code == 404):
-	return True
+	    return True
 
     payload = response.json()
     
