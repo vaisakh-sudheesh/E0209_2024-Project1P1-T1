@@ -29,14 +29,16 @@ public class BookingController {
 
 
     /**
-     * Endpoint Requirement:
+     * <b><u>Endpoint Requirement:</u></b>
      * <p>
      *     1. GET /theatres
-     *        This endpoint returns the list of all available theatres.
+     *        This endpoint returns the list of all available theatres.<br/><br/>
+     *
      *        Response JSON payload: [{“id”: Integer, “name”: String, “location”: String}] with
-     *        HTTP status code 200 (OK). (Return empty list if no theatres are there.)
+     *        HTTP status code 200 (OK). (Return empty list if no theatres are there.)<br/>
      * </p>
-     * TODO: Add parameter and return documentation
+     *
+     * @return HTTP/OK (200) on success with JSON Payload of theatre info
      */
     @GetMapping("/theatres")
     ResponseEntity<?> getTheatres(){
@@ -45,24 +47,26 @@ public class BookingController {
     }
 
     /**
-     * Endpoint Requirement:
+     * <b><u>Endpoint Requirement:</u> 2. GET /shows/theatres/{theatre_id}</b><br/><br/>
      * <p>
-     *     2. GET /shows/theatres/{theatre_id}
      *        This endpoint returns the list of all shows being showcased at the theatre with
-     *        theatre_id.
+     *        theatre_id.<br/><br/>
+     *
      *        Response JSON payload: [{“id”: Integer, ”theatre_id”: Integer, “title”: String, “price”:
      *        Integer, “seats_available”: Integer}] with HTTP status code 200 (OK). (Return empty
-     *        list if no shows are there for the given theatre.)
-     *        If the theatre does not exist then return HTTP 404 (Not Found).
+     *        list if no shows are there for the given theatre.)<br/><br/>
+     *
+     *        If the theatre does not exist then return HTTP 404 (Not Found).<br/>
      * </p>
-     * TODO: Add parameter and return documentation
+     *
+     * @param theater_id TheatreID to be queried
+     * @return HTTP/OK(200) on success with JSON payload of Show info; In case of failure return HTTP/NotFound(404)
      */
     @GetMapping("/shows/theatres/{theatre_id}")
     ResponseEntity<?> getShowsTheatres(@PathVariable Integer theater_id) {
         if (this.theatreRepository.existsById(theater_id)) {
             // Check for validity of provided theatre_id
             List<Show> shows = this.showRepository.findByTheatre_id(theater_id);
-            //System.out.println("getShowsTheatres: "+ shows.toString());
             return ResponseEntity.ok(shows);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -70,22 +74,25 @@ public class BookingController {
     }
 
     /**
-     * Endpoint Requirement:
+     * <b><u>Endpoint Requirement:</u> 3. GET /shows/{show_id}</b><br/><br/>
      * <p>
-     *     3. GET /shows/{show_id}
-     *        This endpoint returns the details of the show with ID show_id.
+     *        This endpoint returns the details of the show with ID show_id.<br/><br/>
+     *
      *        Response JSON payload: {“id”: Integer, ”theatre_id”: Integer, “title”: String, “price”:
-     *        Integer, “seats_available”: Integer} with HTTP status code 200 (OK).
-     *        If the show doesn’t exist, return HTTP 404 (Not Found).
+     *        Integer, “seats_available”: Integer} with HTTP status code 200 (OK).<br/><br/>
+     *
+     *        If the show doesn’t exist, return HTTP 404 (Not Found).<br/>
      * </p>
-     * TODO: Add parameter and return documentation
+     *
+     * @param show_id ShowID to be queried
+     * @return HTTP/OK(200) with JSON payload with show information in case of show being present;
+     *         HTTP/NotFound(404) otherwise.
      */
     @GetMapping("/shows/{show_id}")
     ResponseEntity<?> getShows(@PathVariable Integer show_id) {
         if (this.showRepository.existsById(show_id)) {
             // Check for validity of show_id prior to fetching details
             Show show = this.showRepository.findByShowId(show_id);
-            //System.out.println("getShowsTheatres: "+ show.toString());
             return ResponseEntity.ok(show);
         } else{
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -93,15 +100,17 @@ public class BookingController {
     }
 
     /**
-     * Endpoint Requirement:
+     * <b><u>Endpoint Requirement:</u> 4. GET /bookings/users/{user_id}</b><br/><br/>
      * <p>
-     *     4. GET /bookings/users/{user_id}
-     *        This endpoint returns the list of all bookings made by the user user_id.
+     *        This endpoint returns the list of all bookings made by the user user_id.<br/><br/>
+     *
      *        Response JSON payload: [{“id”: Integer, “show_id”: Integer, “user_id”: Integer,
      *        “seats_booked”: Integer}] with HTTP status code 200 (OK). To return an empty list if
-     *        the user does not have any bookings.
+     *        the user does not have any bookings.<br/><br/>
      * </p>
-     * TODO: Add parameter and return documentation
+     *
+     * @param user_id UserID for which query is to be performed
+     * @return HTTP/OK(200) with JSON payload containing list of show information for supplied UserID.
      */
     @GetMapping("/bookings/users/{user_id}")
     ResponseEntity<?> getBookingsUsers(@PathVariable Integer user_id) {
@@ -110,20 +119,19 @@ public class BookingController {
     }
 
     /**
-     * Endpoint Requirement:
+     * <b><u>Endpoint Requirement:</u> 5. POST /bookings</b><br/><br/>
      * <p>
-     *     5. POST /bookings
      *        Request JSON payload of the form {“show_id”: Integer, ”user_id”: Integer,
-     *        “seats_booked”: Integer}.<br/>
+     *        “seats_booked”: Integer}.<br/><br/>
      *
-     *        This endpoint is invoked by the user to create a booking for show with ID show_id.<br/>
+     *        This endpoint is invoked by the user to create a booking for show with ID show_id.<br/><br/>
      *
-     *        If the show does not exist, return HTTP 400 (Bad Request).<br/>
+     *        If the show does not exist, return HTTP 400 (Bad Request).<br/><br/>
      *
-     *        If the user does not exist, return HTTP 400 (Bad Request).<br/>
+     *        If the user does not exist, return HTTP 400 (Bad Request).<br/><br/>
      *
      *        If the number of seats available for the show is less than seats_booked, return HTTP
-     *        400 (Bad Request).<br/>
+     *        400 (Bad Request).<br/><br/>
      *
      *        This end point needs to make use of the Wallet service to deduct an amount equal to
      *        the price of the show times seats_booked. If the Wallet deduction does not happen
@@ -131,7 +139,10 @@ public class BookingController {
      *        else reduce the number of seats available in the show by seats_booked and return
      *        HTTP 200 (OK).<br/>
      * </p>
-     * TODO: Add parameter and return documentation
+     *
+     * @param bookingreq JSON Payload with booking information to be processed
+     * @return HTTP/OK(200) on successful booking with wallet and seat counts in respective entities updated. Returns
+     *      HTTP/BadRequest(400) on error otherwise.
      */
     @PostMapping("/bookings")
     ResponseEntity<?> postBookings (@RequestBody BookingPayload bookingreq) {
@@ -186,17 +197,19 @@ public class BookingController {
     }
 
     /**
-     * Endpoint Requirement:
+     * <b><u>Endpoint Requirement:</u> 6. DELETE /bookings/users/{user_id}</b><br/><br/>
      * <p>
-     *     6. DELETE /bookings/users/{user_id}
      *        Deletes all booking records for the user with ID user_id. The seats corresponding to
      *        these bookings are to be returned to the available pool. The amounts that were taken
-     *        to make these bookings are returned to the user’s wallet.<br/>
+     *        to make these bookings are returned to the user’s wallet.<br/><br/>
      *
      *        If the user had any bookings then return HTTP Code 200 (OK), else return HTTP
-     *        code 404 (Not Found).<br/>
+     *        code 404 (Not Found).<br/><br/>
      * </p>
-     * TODO: Add parameter and return documentation
+     *
+     * @param user_id UserID for which deletion is to be performed
+     * @return HTTP/OK(200) with booking deleted along with wallet/seats returned to respective system. Returns
+     *      HTTP/NotFound(404) on error otherwise.
      */
     @DeleteMapping("/bookings/users/{user_id}")
     ResponseEntity<?> deleteUsers(@PathVariable Integer user_id) {
@@ -204,17 +217,20 @@ public class BookingController {
     }
 
     /**
-     * Endpoint Requirement:
+     * <b><u>Endpoint Requirement:</u> 7. DELETE /bookings/users/{user_id}/shows/{show_id}</b><br/><br/>
      * <p>
-     *      7. DELETE /bookings/users/{user_id}/shows/{show_id}
      *         Deletes all booking records for the user with ID user_id whose show ID is show_id.
      *         The seats corresponding to these bookings are to be returned to the available pool,
-     *         and the booking amount is also returned to the wallet.<br/>
+     *         and the booking amount is also returned to the wallet.<br/><br/>
      *
      *         If the user had any bookings in the given show then return HTTP Code 200 (OK),
      *         else return HTTP code 404 (Not Found).<br/>
      * </p>
-     * TODO: Add parameter and return documentation
+     *
+     * @param user_id UserID for which deletion is to be performed
+     * @param show_id ShowID for which deleteion is to be performed
+     * @return HTTP/OK(200) with booking deleted along with wallet/seats returned to respective system. Returns
+     *         HTTP/NotFound(404) on error otherwise.
      */
     @DeleteMapping("/bookings/users/{user_id}/shows/{show_id}")
     ResponseEntity<?> deleteUsersShows(@PathVariable Integer user_id, @PathVariable Integer show_id) {
@@ -250,13 +266,13 @@ public class BookingController {
     }
 
     /**
-     * Endpoint Requirement:
+     * <b><u>Endpoint Requirement:</u> 8. DELETE /bookings</b><br/><br/>
      * <p>
-     *      8. DELETE /bookings
      *         This endpoint deletes all bookings of all users in all shows, and returns back the
      *         seats to their available pools and the wallet amounts. Always returns HTTP code 200(OK).<br/>
      * </p>
-     * TODO: Add parameter and return documentation
+     *
+     * @return HTTP/OK (200) returned after all bookings are deleted along with wallet/seats refund.
      */
     @DeleteMapping("/bookings")
     ResponseEntity<?> deleteBookings() {
@@ -273,6 +289,7 @@ public class BookingController {
      * It performs:
      *   - Wallet Credit of amount
      *   - Returning cancelled seats to system.
+     *
      * @param user_id_ user id to which wallet transaction is to be performed.
      * @return True on successful completion, false in case of any failure in wallet transactions.
      */
