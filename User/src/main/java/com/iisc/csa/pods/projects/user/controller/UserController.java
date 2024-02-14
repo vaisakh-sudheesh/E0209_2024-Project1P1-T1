@@ -20,6 +20,7 @@ public class UserController {
 
 
     /**
+     * Endpoint requirement:
      * <p>
      *      POST /users
      *          Request JSON payload: {“name”: String, “email”: String}
@@ -28,13 +29,13 @@ public class UserController {
      *
      *          If a user with the given email address already exists then return HTTP status code
      *          400 (Bad Request), else return HTTP status code 201 (Created) with the JSON
-     *          response {“id”: Integer, “name”: String, “email”: String}
+     *          response {“id”: Integer, “name”: String, “email”: String}<br/>
      * </p>
      * @param postReq
      * @return
      */
     @PostMapping(consumes = "application/json")
-    public ResponseEntity<UserTable> postController(@RequestBody UserTable postReq) {
+    public ResponseEntity<UserTable> postUsers(@RequestBody UserTable postReq) {
         try {
             System.out.println("Inserting data"+postReq.toString());
             UserTable user = userRepo.save(postReq);
@@ -45,8 +46,21 @@ public class UserController {
         }
     }
 
+    /**
+     * Endpoint requirement:
+     * <p>
+     *     GET /users/{user_id}
+     *       This endpoint gets the details of the user with ID user_id.
+     *       Response JSON payload: {“id”: Integer, “name”: String, “email”: String} with HTTP
+     *       status code 200 (OK).<br/>
+     *
+     *        If the user doesn’t exist, return HTTP 404 (Not Found).<br/>
+     * </p>
+     * @param user_id
+     * @return
+     */
     @GetMapping("/{user_id}")
-    public ResponseEntity<UserTable> getController (@PathVariable Integer user_id){
+    public ResponseEntity<UserTable> getUser_id (@PathVariable Integer user_id){
         try {
             if( userRepo.existsById(user_id)) {
                 UserTable userdata = userRepo.findbyId(user_id);
@@ -60,8 +74,22 @@ public class UserController {
         }
     }
 
+    /**
+     * Endpoint requirement:
+     * <p>
+     *     DELETE /users/{user_id}
+     *       This endpoint deletes the user record with the given user_id and also invokes the
+     *       DELETE /bookings/users/{user_id} endpoint on the Booking service and DELETE
+     *       /wallets/{user_id} endpoint on the Wallet service.<br/>
+     *
+     *       Upon successful deletion, return HTTP 200 (OK) status code. If the user doesn’t
+     *       exist, return HTTP 404 (Not Found).<br/>
+     * </p>
+     * @param user_id
+     * @return
+     */
     @DeleteMapping("/{user_id}")
-    public ResponseEntity<?> deleteController(@PathVariable Integer user_id) {
+    public ResponseEntity<?> deleteUser_id(@PathVariable Integer user_id) {
         try {
             if( userRepo.existsById(user_id)) {
                 userRepo.deletebyId(user_id);
@@ -74,8 +102,18 @@ public class UserController {
         }
     }
 
+    /**
+     * Endpoint requirement:
+     * <p>
+     *     DELETE /users
+     *       This endpoint deletes all user records (and hence all their bookings also). Always
+     *       returns HTTP code 200 (OK). Basically, this end-point returns the states of all the
+     *       services to their initial states.<br/>
+     * </p>
+     * @return
+     */
     @DeleteMapping()
-    public ResponseEntity<?> deleteController() {
+    public ResponseEntity<?> deleteAll() {
         userRepo.deleteAll();
         return new ResponseEntity<>(HttpStatus.OK);
     }

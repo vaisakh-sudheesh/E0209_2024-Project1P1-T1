@@ -1,3 +1,6 @@
+/**
+ * Model for User JPA entity layout
+ */
 package com.iisc.csa.pods.projects.user.model;
 
 import jakarta.persistence.*;

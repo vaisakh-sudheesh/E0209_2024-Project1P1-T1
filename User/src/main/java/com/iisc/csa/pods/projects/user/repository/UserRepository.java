@@ -1,3 +1,6 @@
+/**
+ * Repository for User JPA entity management.
+ */
 package com.iisc.csa.pods.projects.user.repository;
 import com.iisc.csa.pods.projects.user.model.UserTable;
 
