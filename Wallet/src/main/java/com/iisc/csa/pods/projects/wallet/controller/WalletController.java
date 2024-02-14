@@ -12,12 +12,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequestMapping("/wallets")
 public class WalletController {
     @Autowired
     WalletRepository walletRepo;
+    // Since each of the microservices that are part of this project have separate in-memory database entities,
+    // interaction between these microservices need to be done over HTTP/Rest request.
+    // URIs for the doing the same.
+    final String usercheck_uri = "http://localhost:8080/users/{user_id}";
 
     /**
      * Endpoint for GET /wallets/{user_id}
@@ -70,10 +76,23 @@ public class WalletController {
     public ResponseEntity<Wallet> putUser_id(@RequestBody WalletPutPayload payload, @PathVariable Integer user_id) {
         try {
             /*
-             * TODO: Should we do a cross check for whether a valid user_id is being passed as argument?
+             * Check if wallet exists or no; this may not be necessary but in case some other module or a direct API
+             * call comes, a sanity check is desirable.
              */
-            /* Check if wallet exists or no */
             if (!walletRepo.existsByUser_id(user_id)) {
+                /*
+                 * Check if the user_id is a valid one prior to creating wallet entry by RestAPI call to User service
+                 */
+                try {
+                    RestTemplate restTemplate = new RestTemplate();
+                    String result = restTemplate.getForObject(usercheck_uri, String.class, user_id);
+                    System.out.println("User check passed"+result );
+                } catch (HttpClientErrorException e) {
+                    if (e.getStatusCode().is4xxClientError()) {
+                        System.out.println("User check failed");
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                }
                 /* Create wallet account and load the amount and continue with rest of the operation */
                 Wallet newWallet = new Wallet(user_id,0);
                 this.walletRepo.save(newWallet);
@@ -119,6 +138,7 @@ public class WalletController {
     public ResponseEntity<?> deleteUser_id(@PathVariable Integer user_id) {
         try {
             if (!this.walletRepo.existsByUser_id(user_id)){
+                /* Is the wallet existing? */
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             } else {
                 this.walletRepo.deleteByUser_id(user_id);
