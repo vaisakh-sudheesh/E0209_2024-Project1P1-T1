@@ -9,7 +9,6 @@ import com.iisc.csa.pods.projects.wallet.model.WalletPutPayload;
 import com.iisc.csa.pods.projects.wallet.repository.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -23,7 +22,7 @@ public class WalletController {
     // Since each of the microservices that are part of this project have separate in-memory database entities,
     // interaction between these microservices need to be done over HTTP/Rest request.
     // URIs for the doing the same.
-    final String usercheck_uri = "http://localhost:8080/users/{user_id}";
+    final String user_check_uri = "http://localhost:8080/users/{user_id}";
 
     /**
      * Endpoint for GET /wallets/{user_id}
@@ -85,7 +84,7 @@ public class WalletController {
                  */
                 try {
                     RestTemplate restTemplate = new RestTemplate();
-                    String result = restTemplate.getForObject(usercheck_uri, String.class, user_id);
+                    String result = restTemplate.getForObject(user_check_uri, String.class, user_id);
                     System.out.println("User check passed"+result );
                 } catch (HttpClientErrorException e) {
                     if (e.getStatusCode().is4xxClientError()) {
