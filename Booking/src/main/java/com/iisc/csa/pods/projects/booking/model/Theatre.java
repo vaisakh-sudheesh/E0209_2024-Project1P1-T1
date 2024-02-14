@@ -1,3 +1,6 @@
+/**
+ * Model for Theatre JPA entity
+ */
 package com.iisc.csa.pods.projects.booking.model;
 
 import jakarta.persistence.*;

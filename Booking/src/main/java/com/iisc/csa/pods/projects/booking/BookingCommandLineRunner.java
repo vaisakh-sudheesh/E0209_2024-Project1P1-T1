@@ -1,3 +1,6 @@
+/**
+ * For initializing Database Tables related to Bookings microservice.
+ */
 package com.iisc.csa.pods.projects.booking;
 
 import com.iisc.csa.pods.projects.booking.model.Show;
@@ -18,14 +21,15 @@ import java.util.Optional;
 
 @Component
 public class BookingCommandLineRunner implements CommandLineRunner {
+    // Repository instance for Theatre and Shows entities
     private final TheatreRepository theatreRepo;
     private final ShowRepository showRepo;
 
+    // Resource loader instance to access theatres.csv and shows.csv
     @Autowired
     private ResourceLoader resourceLoader;
 
     public BookingCommandLineRunner(TheatreRepository theatreRepo_, ShowRepository showRepo_){
-
         this.theatreRepo = theatreRepo_;
         this.showRepo = showRepo_;
     }
@@ -36,9 +40,18 @@ public class BookingCommandLineRunner implements CommandLineRunner {
         PopulateShowsTable();
     }
 
-    private final  Integer THEATRE_CSV_IDX_ID = 0;
-    private final  Integer THEATRE_CSV_IDX_NAME = 1;
+    /**
+     * Constants to handle CSV indices/columsn of Theatres.csv file
+     */
+    private final Integer THEATRE_CSV_IDX_ID = 0;
+    private final Integer THEATRE_CSV_IDX_NAME = 1;
     private final Integer THEATRE_CSV_IDX_LOCATION = 2;
+
+    /**
+     * Method to populate Theatre Entity from theatres.csv.
+     *
+     * @throws IOException
+     */
     private void PopulateTheatreTable() throws IOException {
         final Resource theatresFileResource = resourceLoader.getResource("classpath:static/theatres.csv");
         try {
@@ -49,7 +62,6 @@ public class BookingCommandLineRunner implements CommandLineRunner {
                 String [] values = line.split(",");
                 if (lineCtr > 0 ){
                     // Skip the header line in CSV
-                    // System.out.println("Record = "+values[0]+" ; "+values[1]+" ; "+values[2]);
                     Theatre newRec = new Theatre(Integer.parseInt(values[THEATRE_CSV_IDX_ID]),
                                                 values[THEATRE_CSV_IDX_NAME],
                                                 values[THEATRE_CSV_IDX_LOCATION]);
@@ -61,12 +73,20 @@ public class BookingCommandLineRunner implements CommandLineRunner {
 
     }
 
+    /**
+     * Constants to handle CSV indices/columsn of Theatres.csv file
+     */
     private final Integer SHOWS_CSV_IDX_ID = 0;
     private final Integer SHOWS_CSV_IDX_THEATRE_ID = 1;
     private final Integer SHOWS_CSV_IDX_TITLE = 2;
     private final Integer SHOWS_CSV_IDX_PRICE = 3;
     private final Integer SHOWS_CSV_IDX_SEATS_AVAILABLE = 4;
 
+    /**
+     * Method to populate Shows Entity from shows.csv.
+     *
+     * @throws IOException
+     */
     private void PopulateShowsTable()  throws IOException{
         final Resource showsFileResource = resourceLoader.getResource("classpath:static/shows.csv");
         try {

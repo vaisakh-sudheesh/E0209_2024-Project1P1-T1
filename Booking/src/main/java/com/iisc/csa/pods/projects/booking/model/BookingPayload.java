@@ -1,3 +1,6 @@
+/**
+ * Model for Booking request payload information submitted from client as part of POST request requirement.
+ */
 package com.iisc.csa.pods.projects.booking.model;
 
 import lombok.Getter;

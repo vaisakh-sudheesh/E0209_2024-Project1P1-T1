@@ -1,3 +1,6 @@
+/**
+ * Repository for JPA Shows Entity management
+ */
 package com.iisc.csa.pods.projects.booking.repository;
 
 import com.iisc.csa.pods.projects.booking.model.Show;

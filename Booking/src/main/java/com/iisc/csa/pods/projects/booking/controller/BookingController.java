@@ -1,3 +1,6 @@
+/**
+ * Controller module for Booking microservice
+ */
 package com.iisc.csa.pods.projects.booking.controller;
 
 import com.iisc.csa.pods.projects.booking.model.*;
@@ -17,6 +20,7 @@ import java.util.Map;
 
 @RestController
 public class BookingController {
+    // Repository instances for accessing theatre, shows and booking entities
     @Autowired
     private TheatreRepository theatreRepository;
     @Autowired
@@ -24,11 +28,15 @@ public class BookingController {
     @Autowired
     private BookingRepository bookingRepository;
 
+    // Since User and Wallet microservices have separate in-memory database entities,
+    // interaction between these microservices need to be done over HTTP/Rest request.
+    // URIs for the doing the same.
     final String usercheck_uri = "http://localhost:8080/users/{user_id}";
     final String walletaction_uri = "http://localhost:8082/wallets/{user_id}";
 
 
     /**
+     * Endpoint Requirement:
      * <p>
      *     1. GET /theatres
      *        This endpoint returns the list of all available theatres.
@@ -37,14 +45,14 @@ public class BookingController {
      * </p>
      * TODO: Add parameter and return documentation
      */
-
     @GetMapping("/theatres")
-    ResponseEntity<?> getController(){
+    ResponseEntity<?> getTheatres(){
         List<Theatre> theatres = this.theatreRepository.findAll();
         return ResponseEntity.ok(theatres);
     }
 
     /**
+     * Endpoint Requirement:
      * <p>
      *     2. GET /shows/theatres/{theatre_id}
      *        This endpoint returns the list of all shows being showcased at the theatre with
@@ -57,7 +65,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @GetMapping("/shows/theatres/{theatre_id}")
-    ResponseEntity<?> getControllerShowsTheatres(@RequestParam Integer theater_id) {
+    ResponseEntity<?> getShowsTheatres(@RequestParam Integer theater_id) {
         if (this.theatreRepository.existsById(theater_id)) {
             List<Show> theatres = this.showRepository.findByTheatre_id(theater_id);
             return ResponseEntity.ok(theatres);
@@ -67,6 +75,7 @@ public class BookingController {
     }
 
     /**
+     * Endpoint Requirement:
      * <p>
      *     3. GET /shows/{show_id}
      *        This endpoint returns the details of the show with ID show_id.
@@ -77,7 +86,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @GetMapping("/shows/{show_id}")
-    ResponseEntity<?> getControllerShows(@RequestParam Integer show_id) {
+    ResponseEntity<?> getShows(@RequestParam Integer show_id) {
         if (this.showRepository.existsById(show_id)) {
             Show show = this.showRepository.findByShowId(show_id);
             return ResponseEntity.ok(show);
@@ -87,6 +96,7 @@ public class BookingController {
     }
 
     /**
+     * Endpoint Requirement:
      * <p>
      *     4. GET /bookings/users/{user_id}
      *        This endpoint returns the list of all bookings made by the user user_id.
@@ -97,12 +107,13 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @GetMapping("/bookings/users/{user_id}")
-    ResponseEntity<?> getControllerBookingsUsers(@RequestParam Integer user_id) {
+    ResponseEntity<?> getBookingsUsers(@RequestParam Integer user_id) {
         List<Booking> bookings = this.bookingRepository.findByUser_id(user_id);
         return ResponseEntity.ok(bookings);
     }
 
     /**
+     * Endpoint Requirement:
      * <p>
      *     5. POST /bookings
      *        Request JSON payload of the form {“show_id”: Integer, ”user_id”: Integer,
@@ -126,7 +137,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @PostMapping("/bookings")
-    ResponseEntity<?> postController (@RequestBody BookingPayload bookingreq) {
+    ResponseEntity<?> postBookings (@RequestBody BookingPayload bookingreq) {
         // Check for validity of show_id
         if (!this.showRepository.existsById(bookingreq.getShow_id())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -191,6 +202,7 @@ public class BookingController {
 
 
     /**
+     * Endpoint Requirement:
      * <p>
      *     6. DELETE /bookings/users/{user_id}
      *        Deletes all booking records for the user with ID user_id. The seats corresponding to
@@ -203,11 +215,12 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @DeleteMapping("/bookings/users/{user_id}")
-    ResponseEntity<?> deleteController(@RequestParam Integer user_id) {
+    ResponseEntity<?> deleteUsers(@RequestParam Integer user_id) {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
+     * Endpoint Requirement:
      * <p>
      *      7. DELETE /bookings/users/{user_id}/shows/{show_id}
      *         Deletes all booking records for the user with ID user_id whose show ID is show_id.
@@ -220,7 +233,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @DeleteMapping("/bookings/users/{user_id}/shows/{show_id}")
-    ResponseEntity<?> deleteController(@RequestParam Integer user_id, @RequestParam Integer show_id) {
+    ResponseEntity<?> deleteUsersShows(@RequestParam Integer user_id, @RequestParam Integer show_id) {
         if (!this.bookingRepository.existsByUser_idAndShow_id(user_id, show_id)){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -269,6 +282,7 @@ public class BookingController {
 
 
     /**
+     * Endpoint Requirement:
      * <p>
      *      8. DELETE /bookings
      *         This endpoint deletes all bookings of all users in all shows, and returns back the
@@ -277,7 +291,7 @@ public class BookingController {
      * TODO: Add parameter and return documentation
      */
     @DeleteMapping("/bookings")
-    ResponseEntity<?> deleteController() {
+    ResponseEntity<?> deleteBookings() {
         List<Booking> bookings = this.bookingRepository.findAll();
         for (Booking booking : bookings) {
             System.out.println("Booking Entry: " + booking.toString());
