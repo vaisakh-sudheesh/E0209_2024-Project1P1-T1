@@ -314,8 +314,8 @@ public class BookingController {
             uriVariables.put("user_id", user_id_.toString());
 
             // Make the HTTP/PUT request
-            String walletaction_uri = "http://localhost:8082/wallets/{user_id}";
-            ResponseEntity<String> response = restTemplate.exchange(walletaction_uri, HttpMethod.PUT, entity, String.class, uriVariables);
+            String wallet_action_uri = "http://localhost:8082/wallets/{user_id}";
+            ResponseEntity<String> response = restTemplate.exchange(wallet_action_uri, HttpMethod.PUT, entity, String.class, uriVariables);
 
             if (response.getStatusCode().is2xxSuccessful())
                 return true;
