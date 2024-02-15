@@ -24,10 +24,13 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @Query("SELECT CASE WHEN count(b) > 0 THEN true ELSE false END FROM Booking b WHERE b.user_id = :user_id AND b.show_id = :show_id")
     boolean existsByUser_idAndShow_id(Integer user_id, Show show_id);
 
+    @Query("SELECT CASE WHEN count(b) > 0 THEN true ELSE false END FROM Booking b WHERE b.user_id = :user_id")
+    boolean existsByUser_id(Integer user_id);
+
 @Transactional
     @Modifying
     @Query("DELETE FROM Booking b WHERE b.user_id = :user_id")
-    void deleteByUser_id(Integer user_id);
+    void deleteAllByUser_id(Integer user_id);
 
     @Transactional
     @Modifying

@@ -213,6 +213,25 @@ public class BookingController {
      */
     @DeleteMapping("/bookings/users/{user_id}")
     ResponseEntity<?> deleteUsers(@PathVariable Integer user_id) {
+        if (!this.bookingRepository.existsByUser_id(user_id)){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        // Now handle the case of return of seats and refund
+        List<Booking> bookings = this.bookingRepository.findByUser_id(user_id);
+
+        // Process each booking and perform refunds and return of seats
+        for (Booking booking : bookings) {
+            if (!this.CancelBooking(booking)) {
+                /*
+                 * TODO/BUG: Possible failure point here, in case one of the transaction failed, it will prevent
+                 *           removal of rows. Fix it by removing each row on successful completion rather than
+                 *           failing in between.
+                 */
+                System.out.println("deleteUsers: Cancelling booking failed");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+        }
+        this.bookingRepository.deleteAllByUser_id(user_id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -245,10 +264,11 @@ public class BookingController {
         for (Booking booking : bookings) {
             if (!this.CancelBooking(booking)) {
                 /*
-                 * TODO/BUG: Failure point here, in case one of the transaction failed, it will prevent removal of rows.
-                 *  Fix it by removing each row on successful completion rather than failing in between.
+                 * TODO/BUG: Possible failure point here, in case one of the transaction failed, it will prevent
+                 *           removal of rows. Fix it by removing each row on successful completion rather than
+                 *           failing in between.
                  */
-                System.out.println("Cancelling booking failed");
+                System.out.println("deleteUsersShows: Cancelling booking failed");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
         }
@@ -269,29 +289,40 @@ public class BookingController {
     ResponseEntity<?> deleteBookings() {
         List<Booking> bookings = this.bookingRepository.findAll();
         for (Booking booking : bookings) {
-            System.out.println("Booking Entry: " + booking.toString());
-            //TODO: Handle the case of returning seats to available pool and wallet amount
+            System.out.println("deleteBookings: Booking Entry: " + booking.toString());
+            if (!this.CancelBooking(booking)) {
+
+                System.out.println("deleteBookings: Cancelling booking failed");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    /**
+     * Helper method for Canceling a given booking
+     *
+     * @param booking Instance of booking to be canceled
+     * @return True on successful cancellation; false otherwise
+     */
     boolean CancelBooking (Booking booking){
+        boolean result = true;
         Integer seats_booked = booking.getSeats_booked();
 
         Show showinfo = this.showRepository.findByShowId(booking.getShow_id().getId());
         Integer refund_amount = seats_booked * showinfo.getPrice();
-        System.out.println("Cancelling booking :"+booking.toString());
+        System.out.println("Cancelling booking :"+booking);
 
         // Return the booking amount to the wallet.
         if (!this.WalletTransaction(booking.getUser_id(), false, refund_amount)) {
-            return false;
+            result = false;
+        } else {// Return seats corresponding to these bookings to the available pool of show
+            System.out.println("Cancelling booking, returning seat count :"+seats_booked);
+            showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
+            this.showRepository.save(showinfo);
         }
 
-        // Return seats corresponding to these bookings to the available pool of show
-        System.out.println("Cancelling booking, returning seat count :"+seats_booked);
-        showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
-        this.showRepository.save(showinfo);
-        return true;
+        return result;
     }
     /**
      * Utility method for performing booking refund operation
