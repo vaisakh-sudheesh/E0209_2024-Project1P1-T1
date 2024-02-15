@@ -8,6 +8,7 @@ import com.iisc.csa.pods.projects.booking.repository.BookingRepository;
 import com.iisc.csa.pods.projects.booking.repository.ShowRepository;
 import com.iisc.csa.pods.projects.booking.repository.TheatreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -26,6 +27,9 @@ public class BookingController {
     private ShowRepository showRepository;
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Value("${DOCKER_RUNNING:No}")
+    private String dockerStatus;
 
 
     /**
@@ -157,7 +161,9 @@ public class BookingController {
             // Since each of the microservices in this project have separate in-memory database entities,
             // interaction between these microservices need to be done over HTTP/Rest request.
             // URIs for the doing the same.
-            String user_check_uri = "http://localhost:8080/users/{user_id}";
+            String user_check_uri = dockerStatus.equals("Yes") ?
+                    "http://host.docker.internal:8080/users/{user_id}" :
+                    "http://localhost:8080/users/{user_id}";
             String result = restTemplate.getForObject(user_check_uri, String.class, bookingreq.getUser_id());
             System.out.println("User check passed"+result );
         } catch (HttpClientErrorException e) {
@@ -354,7 +360,8 @@ public class BookingController {
             uriVariables.put("user_id", user_id_.toString());
 
             // Make the HTTP/PUT request
-            String wallet_action_uri = "http://localhost:8082/wallets/{user_id}";
+            String wallet_action_uri = dockerStatus.equals("Yes") ?
+                    "http://host.docker.internal:8082/wallets/{user_id}" : "http://localhost:8082/wallets/{user_id}";
             ResponseEntity<String> response = restTemplate.exchange(wallet_action_uri, HttpMethod.PUT, entity, String.class, uriVariables);
 
             if (response.getStatusCode().is2xxSuccessful())

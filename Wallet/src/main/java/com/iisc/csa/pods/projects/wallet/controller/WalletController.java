@@ -8,6 +8,7 @@ import com.iisc.csa.pods.projects.wallet.model.Wallet;
 import com.iisc.csa.pods.projects.wallet.model.WalletPutPayload;
 import com.iisc.csa.pods.projects.wallet.repository.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +20,15 @@ import org.springframework.web.client.RestTemplate;
 public class WalletController {
     @Autowired
     WalletRepository walletRepo;
+
+    @Value("${DOCKER_RUNNING:No}")
+    private String dockerStatus;
+
     // Since each of the microservices that are part of this project have separate in-memory database entities,
     // interaction between these microservices need to be done over HTTP/Rest request.
     // URIs for the doing the same.
-    final String user_check_uri = "http://localhost:8080/users/{user_id}";
+    final String user_check_uri_docker = "http://host.docker.internal:8080/users/{user_id}";
+    final String user_check_uri_localdev = "http://localhost:8080/users/{user_id}";
 
     /**
      * Endpoint for GET /wallets/{user_id}
@@ -84,7 +90,8 @@ public class WalletController {
                  */
                 try {
                     RestTemplate restTemplate = new RestTemplate();
-                    String result = restTemplate.getForObject(user_check_uri, String.class, user_id);
+                    String query_url = dockerStatus.equals("Yes") ? user_check_uri_docker : user_check_uri_localdev;
+                    String result = restTemplate.getForObject(query_url, String.class, user_id);
                     System.out.println("User check passed"+result );
                 } catch (HttpClientErrorException e) {
                     if (e.getStatusCode().is4xxClientError()) {
