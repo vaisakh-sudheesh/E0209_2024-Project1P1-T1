@@ -29,10 +29,15 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
 @Transactional
     @Modifying
+    @Query("DELETE FROM Booking b WHERE b.id = :id")
+    void deleteById(Integer id);
+
+    @Transactional
+    @Modifying
     @Query("DELETE FROM Booking b WHERE b.user_id = :user_id")
     void deleteAllByUser_id(Integer user_id);
 
-    @Transactional
+@Transactional
     @Modifying
     @Query("DELETE FROM Booking b WHERE b.user_id = :user_id AND b.show_id = :show_id")
     void deleteAllByUser_idAndShow_id (Integer user_id, Show show_id);

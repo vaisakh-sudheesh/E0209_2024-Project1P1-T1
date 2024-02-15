@@ -28,10 +28,43 @@ public class BookingController {
     @Autowired
     private BookingRepository bookingRepository;
 
+    ////////////////////////////////////// URI Management //////////////////////////////////////
+    /**
+     * Since each of the microservices that are part of this project have separate in-memory database entities,
+     * interaction between these microservices need to be done over HTTP/Rest request.
+     * URIs for the doing the same.<br/>
+     *
+     * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
+     */
     @Value("${DOCKER_RUNNING:No}")
     private String dockerStatus;
 
+    /**
+     * Helper methods and fields for user microservice URI
+     */
+    private String getUserUriBase(){
+        String user_uri_docker = "http://host.docker.internal:8080/";
+        String user_uri_localdev = "http://localhost:8080/";
+        return (dockerStatus.equals("Yes") ? user_uri_docker : user_uri_localdev) ;
+    }
+    private String getUserCheckUri() {
+        return getUserUriBase() + "users/{user_id}";
+    }
 
+    /**
+     * Helper methods and fields for wallet microservice URI
+     */
+    private String getWalletUriBase (){
+
+        String wallet_uri_docker = "http://host.docker.internal:8082/";
+        String wallet_uri_localdev = "http://localhost:8082/";
+        return (dockerStatus.equals("Yes") ? wallet_uri_docker : wallet_uri_localdev);
+    }
+    private String getWalletUserCheckUri () {
+        return getWalletUriBase() + "wallets/{user_id}";
+    }
+
+    ////////////////////////////////////// Controller Endpoints //////////////////////////////////////
     /**
      * <b><u>Endpoint Requirement:</u> 1. GET /theatres</b>
      * <p>
@@ -161,9 +194,7 @@ public class BookingController {
             // Since each of the microservices in this project have separate in-memory database entities,
             // interaction between these microservices need to be done over HTTP/Rest request.
             // URIs for the doing the same.
-            String user_check_uri = dockerStatus.equals("Yes") ?
-                    "http://host.docker.internal:8080/users/{user_id}" :
-                    "http://localhost:8080/users/{user_id}";
+            String user_check_uri = getUserCheckUri();
             restTemplate.getForObject(user_check_uri, String.class, bookingreq.getUser_id());
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().is4xxClientError()) {
@@ -231,16 +262,13 @@ public class BookingController {
         // Process each booking and perform refunds and return of seats
         for (Booking booking : bookings) {
             if (!this.CancelBooking(booking)) {
-                /*
-                 * TODO/BUG: Possible failure point here, in case one of the transaction failed, it will prevent
-                 *           removal of rows. Fix it by removing each row on successful completion rather than
-                 *           failing in between.
-                 */
                 System.out.println("deleteUsers: Cancelling booking failed");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
+            this.bookingRepository.deleteById(booking.getId());
         }
-        this.bookingRepository.deleteAllByUser_id(user_id);
+        // this delete may not be required, as each rows are removed iteratively
+        //this.bookingRepository.deleteAllByUser_id(user_id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -275,16 +303,13 @@ public class BookingController {
         // Process each booking and perform refunds and return of seats
         for (Booking booking : bookings) {
             if (!this.CancelBooking(booking)) {
-                /*
-                 * TODO/BUG: Possible failure point here, in case one of the transaction failed, it will prevent
-                 *           removal of rows. Fix it by removing each row on successful completion rather than
-                 *           failing in between.
-                 */
                 System.out.println("deleteUsersShows: Cancelling booking failed");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
+            this.bookingRepository.deleteById(booking.getId());
         }
-        this.bookingRepository.deleteAllByUser_idAndShow_id(user_id, show);
+        // this delete may not be required, as each rows are removed iteratively
+        //this.bookingRepository.deleteAllByUser_idAndShow_id(user_id, show);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -305,11 +330,12 @@ public class BookingController {
                 System.out.println("deleteBookings: Cancelling booking failed");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
+            this.bookingRepository.deleteById(booking.getId());
         }
-        // TODO: Removal of booking is not done
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    ////////////////////////////////////// Helper methods //////////////////////////////////////
     /**
      * Helper method for Canceling a given booking
      *
@@ -331,9 +357,6 @@ public class BookingController {
             showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
             this.showRepository.save(showinfo);
         }
-
-        // TODO: Now the booking entry can be safely removed.
-
         return result;
     }
     /**
@@ -365,8 +388,7 @@ public class BookingController {
             uriVariables.put("user_id", user_id_.toString());
 
             // Make the HTTP/PUT request
-            String wallet_action_uri = dockerStatus.equals("Yes") ?
-                    "http://host.docker.internal:8082/wallets/{user_id}" : "http://localhost:8082/wallets/{user_id}";
+            String wallet_action_uri = getWalletUserCheckUri();
             ResponseEntity<String> response = restTemplate.exchange(wallet_action_uri, HttpMethod.PUT, entity, String.class, uriVariables);
 
             if (response.getStatusCode().is2xxSuccessful())

@@ -19,6 +19,7 @@ public class UserController {
     @Autowired
     private UserRepository userRepo;
 
+    ////////////////////////////////////// URI Management //////////////////////////////////////
     /**
      * Since each of the microservices that are part of this project have separate in-memory database entities,
      * interaction between these microservices need to be done over HTTP/Rest request.
@@ -34,8 +35,12 @@ public class UserController {
      */
     final String wallet_uri_docker = "http://host.docker.internal:8082/";
     final String wallet_uri_localdev = "http://localhost:8082/";
-    String getWalletUri (){
+    String getWalletUriBase (){
         return dockerStatus.equals("Yes") ? wallet_uri_docker : wallet_uri_localdev;
+    }
+
+    String getUserWalletDeleteUri(){
+        return getWalletUriBase() + "{user_id}";
     }
 
     /**
@@ -43,10 +48,15 @@ public class UserController {
      */
     final String booking_uri_docker = "http://host.docker.internal:8081/";
     final String booking_uri_localdev = "http://localhost:8081/";
-    String getBookingUri (){
+    String getBookingUriBase (){
         return dockerStatus.equals("Yes") ? booking_uri_docker : booking_uri_localdev;
     }
 
+    String getUserBookingDeleteUri() {
+        return getBookingUriBase()+ "bookings/users/{user_id}";
+    }
+
+    ////////////////////////////////////// Controller Endpoints //////////////////////////////////////
     /**
      * <b><u>Endpoint requirement:</u>  1. POST /users</b>
      * <p>
@@ -120,8 +130,8 @@ public class UserController {
     public ResponseEntity<?> deleteUser_id(@PathVariable Integer user_id) {
         try {
             if( userRepo.existsById(user_id)) {
-                // TODO: Invoke bookings delete of user_id
-                // TODO: Invoke wallet delete for user_id
+                DeleteUserBookings(user_id);
+                DeleteUserWallets(user_id);
                 userRepo.deletebyId(user_id);
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
@@ -149,4 +159,34 @@ public class UserController {
         userRepo.deleteAll();
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    ////////////////////////////////////// Helper methods //////////////////////////////////////
+
+    /**
+     *  Helper method to perform deletion of bookings associated with user account.
+     *  This will be invoked on user account deletion endpoints.<br/>
+     *
+     * @param user_id UserID of account to release bookings
+     * @return true on success; false otherwise
+     */
+    boolean DeleteUserBookings(Integer user_id){
+        // TODO: Implement deletion REST API call to Bookings service
+        return true;
+    }
+
+    /**
+     *  Helper method to perform deletion of wallet associated with user account.
+     *  This will be invoked on user account deletion endpoints.<br/><br/>
+     *
+     * WARN: Due to the nature of operation sequence, bookings need to be freed up prior
+     *       to releasing wallet accounts.<br/>
+     *
+     * @param user_id UserID of account to release wallet
+     * @return true on success; false otherwise
+     */
+    boolean DeleteUserWallets(Integer user_id){
+        // TODO: Implement deletion REST API call to Wallets service
+        return true;
+    }
+
 }

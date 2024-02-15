@@ -21,9 +21,7 @@ public class WalletController {
     @Autowired
     WalletRepository walletRepo;
 
-    @Value("${DOCKER_RUNNING:No}")
-    private String dockerStatus;
-
+    ////////////////////////////////////// URI Management //////////////////////////////////////
     /**
      * Since each of the microservices that are part of this project have separate in-memory database entities,
      * interaction between these microservices need to be done over HTTP/Rest request.
@@ -31,9 +29,23 @@ public class WalletController {
      *
      * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
      */
-    final String user_check_uri_docker = "http://host.docker.internal:8080/users/{user_id}";
-    final String user_check_uri_localdev = "http://localhost:8080/users/{user_id}";
+    @Value("${DOCKER_RUNNING:No}")
+    private String dockerStatus;
 
+    /**
+     * Helper methods and fields for user microservice URI
+     */
+    private String getUserUriBase(){
+
+        String user_uri_docker = "http://host.docker.internal:8080/";
+        String user_uri_localdev = "http://localhost:8080/";
+        return (dockerStatus.equals("Yes") ? user_uri_docker : user_uri_localdev) ;
+    }
+    private String getUserCheckUri(){
+        return getUserUriBase() + "users/{user_id}";
+    }
+
+    ////////////////////////////////////// Controller Endpoints //////////////////////////////////////
     /**
      * <b><u>Endpoint requirement:</u>  1. GET /wallets/{user_id}</b>
      * <p>
@@ -97,8 +109,7 @@ public class WalletController {
                  */
                 try {
                     RestTemplate restTemplate = new RestTemplate();
-                    /* Docker and non-docker URI difference handling. */
-                    String query_url = dockerStatus.equals("Yes") ? user_check_uri_docker : user_check_uri_localdev;
+                    String query_url = getUserCheckUri();
                     restTemplate.getForObject(query_url, String.class, user_id);
                 } catch (HttpClientErrorException e) {
                     if (e.getStatusCode().is4xxClientError()) {
