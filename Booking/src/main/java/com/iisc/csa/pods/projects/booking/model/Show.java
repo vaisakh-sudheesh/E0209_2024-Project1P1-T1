@@ -8,27 +8,50 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * JPA Model class for Show.
+ */
 @Entity
 @Data
 @Table(name = "Show")
 @Getter
 @Setter
 public class Show {
+    /**
+     * Primary key - ID field for unique identifier of Show.<br/><br/>
+     *
+     * Since the values are initialized from 'Shows.csv' by runner,
+     * a generator need not be associated with this field.<br/>
+     */
     @Id
     @Column(name = "id")
     Integer id;
 
+    /**
+     * Theatre ID for show
+     */
     @Column(name = "theatre_id")
     Integer theatre_id;
 
+    /**
+     * Title of show
+     */
     @Column(name = "title")
     String title;
 
+    /**
+     * Price of ticket
+     */
     @Column(name = "price")
     Integer price;
 
+    /**
+     * Number of seats available
+     */
     @Column(name = "seats_available")
     Integer seats_available;
+
+    // Constructors
 
     public Show(){}
 

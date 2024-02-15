@@ -10,19 +10,38 @@ import lombok.Setter;
 
 import java.util.Collection;
 
+/**
+ *  JPA Model class for Theatre.
+ */
 @Entity
 @Data
 @Table(name="Theatre")
 @Setter
 @Getter
 public class Theatre {
+    /**
+     * Primary key - ID field for unique identifier of Show.<br/><br/>
+     *
+     * Since the values are initialized from 'Shows.csv' by runner,
+     * a generator need not be associated with this field.<br/>
+     */
     @Id
     @Column(name = "id")
     Integer id;
 
+    /**
+     * Name of theatre<br/><br/>
+     *
+     * No validations steps are added as input will be read from Theatres.csv by CommandLineRunner.
+     */
     @Column (name = "name")
     String name;
 
+    /**
+     * Location of the theatre<br/><br/>
+     *
+     * No validations steps are added as input will be read from Theatres.csv by CommandLineRunner.
+     */
     @Column (name = "location")
     String location;
 
