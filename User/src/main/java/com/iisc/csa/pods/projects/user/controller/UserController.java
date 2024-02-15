@@ -8,6 +8,7 @@ package com.iisc.csa.pods.projects.user.controller;
 import com.iisc.csa.pods.projects.user.model.UserTable;
 import com.iisc.csa.pods.projects.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,33 @@ public class UserController {
     @Autowired
     private UserRepository userRepo;
 
+    /**
+     * Since each of the microservices that are part of this project have separate in-memory database entities,
+     * interaction between these microservices need to be done over HTTP/Rest request.
+     * URIs for the doing the same.<br/>
+     *
+     * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
+     */
+    @Value("${DOCKER_RUNNING:No}")
+    private String dockerStatus;
+
+    /**
+     * Helper methods and fields for wallet microservice URI
+     */
+    final String wallet_uri_docker = "http://host.docker.internal:8082/";
+    final String wallet_uri_localdev = "http://localhost:8082/";
+    String getWalletUri (){
+        return dockerStatus.equals("Yes") ? wallet_uri_docker : wallet_uri_localdev;
+    }
+
+    /**
+     * Helper methods and fields for booking microservice URI
+     */
+    final String booking_uri_docker = "http://host.docker.internal:8081/";
+    final String booking_uri_localdev = "http://localhost:8081/";
+    String getBookingUri (){
+        return dockerStatus.equals("Yes") ? booking_uri_docker : booking_uri_localdev;
+    }
 
     /**
      * <b><u>Endpoint requirement:</u>  1. POST /users</b>
