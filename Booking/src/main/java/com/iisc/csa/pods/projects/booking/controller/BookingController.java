@@ -66,7 +66,7 @@ public class BookingController {
      * @param theater_id TheatreID to be queried
      * @return HTTP/OK(200) on success with JSON payload of Show info; In case of failure return HTTP/NotFound(404)
      */
-    @GetMapping("/shows/theatres/{theatre_id}")
+    @GetMapping("/shows/theatres/{theater_id}")
     ResponseEntity<?> getShowsTheatres(@PathVariable Integer theater_id) {
         if (this.theatreRepository.existsById(theater_id)) {
             // Check for validity of provided theatre_id
