@@ -12,6 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -36,7 +42,7 @@ public class UserController {
     final String wallet_uri_docker = "http://host.docker.internal:8082/";
     final String wallet_uri_localdev = "http://localhost:8082/";
     String getWalletUriBase (){
-        return dockerStatus.equals("Yes") ? wallet_uri_docker : wallet_uri_localdev;
+        return (dockerStatus.equals("Yes") ? wallet_uri_docker : wallet_uri_localdev)+"wallets/";
     }
 
     String getUserWalletDeleteUri(){
@@ -154,8 +160,11 @@ public class UserController {
      */
     @DeleteMapping()
     public ResponseEntity<?> deleteAll() {
-        // TODO: Invoke bookings delete of user_id
-        // TODO: Invoke wallet delete for user_id
+        List<UserTable> users = this.userRepo.findAll();
+        for (UserTable user : users) {
+            DeleteUserBookings(user.getId());
+            DeleteUserWallets(user.getId());
+        }
         userRepo.deleteAll();
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -169,9 +178,17 @@ public class UserController {
      * @param user_id UserID of account to release bookings
      * @return true on success; false otherwise
      */
-    boolean DeleteUserBookings(Integer user_id){
-        // TODO: Implement deletion REST API call to Bookings service
-        return true;
+    void DeleteUserBookings(Integer user_id){
+        try {
+            Map<String, String> params = new HashMap<String, String>();
+            RestTemplate restTemplate = new RestTemplate();
+            params.put("user_id", user_id.toString());
+            restTemplate.delete (getUserBookingDeleteUri(), params);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().is4xxClientError()) {
+                System.out.println("DeleteUserBookings failed" +e.getStatusCode());
+            }
+        }
     }
 
     /**
@@ -184,9 +201,17 @@ public class UserController {
      * @param user_id UserID of account to release wallet
      * @return true on success; false otherwise
      */
-    boolean DeleteUserWallets(Integer user_id){
-        // TODO: Implement deletion REST API call to Wallets service
-        return true;
+    void DeleteUserWallets(Integer user_id){
+        try {
+            Map<String, String> params = new HashMap<String, String>();
+            RestTemplate restTemplate = new RestTemplate();
+            params.put("user_id", user_id.toString());
+            restTemplate.delete (getUserWalletDeleteUri(), params);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().is4xxClientError()) {
+                System.out.println("DeleteUserWallets failed"+e.getStatusCode());
+            }
+        }
     }
 
 }
