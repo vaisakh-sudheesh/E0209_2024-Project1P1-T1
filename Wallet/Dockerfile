@@ -8,4 +8,4 @@ COPY mvnw /app/mvnw
 COPY src  /app/src
 COPY pom.xml /app/pom.xml
 
-CMD ["./mvnw", "spring-boot:run"]
+ENTRYPOINT ["./mvnw", "spring-boot:run"]
