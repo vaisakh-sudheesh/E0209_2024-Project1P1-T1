@@ -14,4 +14,4 @@ Project-1/Phase-1 repository for E0209-Principles of Distributed Software Vaisak
 - A shell script **build-n-run-docker.sh** is added to build and launch docker for each service.
 - An environment variable **DOCKER_RUNNING** is added in Dockerfile and read in code to differentiate between docker and non-docker execution.
 - Each source code in service modules is organized into controller, model and repository packages/directories to organize source code.
-- CSV files to preload data into Bookings entity are included as resources(Booking/src/main/resources/static/*.csv).
+- CSV files to preload data into Bookings entity are included as resources (Booking/src/main/resources/static/*.csv).
