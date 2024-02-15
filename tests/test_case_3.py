@@ -54,8 +54,9 @@ def add_money_and_book_ticket(name,email,showID):
             print("Test passed")
         else:
             print("Test failed")
-    except:
-        print("Some Exception Occurred")
+    except Exception as error:
+        print("Some Exception Occurred: ", type(error).__name__, "–", str(error) )
+        print(traceback.format_exc())
 
 if __name__ == "__main__":
     main()

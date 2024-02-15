@@ -1,3 +1,4 @@
+import traceback
 import requests
 
 userServiceURL = "http://localhost:8080"
@@ -53,8 +54,9 @@ def add_money_and_check_detail(name, email, showID, walletAmount):
             print("Test Passed")
         else:
             print("Test Failed")
-    except:
-        print("Some Exception Occurred")
+    except Exception as error:
+        print("Some Exception Occurred: ", type(error).__name__, "–", str(error) )
+        print(traceback.format_exc())
 
 if __name__ == "__main__":
     main()
