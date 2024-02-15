@@ -165,7 +165,6 @@ public class BookingController {
                     "http://host.docker.internal:8080/users/{user_id}" :
                     "http://localhost:8080/users/{user_id}";
             String result = restTemplate.getForObject(user_check_uri, String.class, bookingreq.getUser_id());
-            System.out.println("User check passed"+result );
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().is4xxClientError()) {
                 System.out.println("User check failed");
@@ -295,9 +294,7 @@ public class BookingController {
     ResponseEntity<?> deleteBookings() {
         List<Booking> bookings = this.bookingRepository.findAll();
         for (Booking booking : bookings) {
-            System.out.println("deleteBookings: Booking Entry: " + booking.toString());
             if (!this.CancelBooking(booking)) {
-
                 System.out.println("deleteBookings: Cancelling booking failed");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
@@ -317,13 +314,12 @@ public class BookingController {
 
         Show showinfo = this.showRepository.findByShowId(booking.getShow_id().getId());
         Integer refund_amount = seats_booked * showinfo.getPrice();
-        System.out.println("Cancelling booking :"+booking);
 
         // Return the booking amount to the wallet.
         if (!this.WalletTransaction(booking.getUser_id(), false, refund_amount)) {
             result = false;
         } else {// Return seats corresponding to these bookings to the available pool of show
-            System.out.println("Cancelling booking, returning seat count :"+seats_booked);
+            //System.out.println("Cancelling booking, returning seat count :"+seats_booked);
             showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
             this.showRepository.save(showinfo);
         }
@@ -342,7 +338,6 @@ public class BookingController {
     boolean WalletTransaction(Integer user_id_ , boolean isDebit, Integer amount) {
         // Wallet transaction
         try {
-            System.out.println("Initiating wallet refund transaction...");
             RestTemplate restTemplate = new RestTemplate();
 
             HttpHeaders headers = new HttpHeaders();

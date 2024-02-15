@@ -37,7 +37,6 @@ public class UserController {
     @PostMapping(consumes = "application/json")
     public ResponseEntity<UserTable> postUsers(@RequestBody UserTable postReq) {
         try {
-            System.out.println("Inserting data"+postReq.toString());
             UserTable user = userRepo.save(postReq);
             return new ResponseEntity<>(user, HttpStatus.CREATED);
         }
