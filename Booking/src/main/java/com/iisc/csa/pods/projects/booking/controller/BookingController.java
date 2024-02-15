@@ -243,14 +243,7 @@ public class BookingController {
 
         // Process each booking and perform refunds and return of seats
         for (Booking booking : bookings) {
-            Integer seats_booked = booking.getSeats_booked();
-
-            Show showinfo = this.showRepository.findByShowId(booking.getShow_id().getId());
-            Integer refund_amount = seats_booked * showinfo.getPrice();
-            System.out.println("Cancelling booking :"+booking.toString());
-
-            // Return the booking amount to the wallet.
-            if (!this.WalletTransaction(user_id, false, refund_amount)) {
+            if (!this.CancelBooking(booking)) {
                 /*
                  * TODO/BUG: Failure point here, in case one of the transaction failed, it will prevent removal of rows.
                  *  Fix it by removing each row on successful completion rather than failing in between.
@@ -258,13 +251,7 @@ public class BookingController {
                 System.out.println("Cancelling booking failed");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
-
-            // Return seats corresponding to these bookings to the available pool of show
-            System.out.println("Cancelling booking, returning seat count :"+seats_booked);
-            showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
-            this.showRepository.save(showinfo);
         }
-
         this.bookingRepository.deleteAllByUser_idAndShow_id(user_id, show);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -288,6 +275,24 @@ public class BookingController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    boolean CancelBooking (Booking booking){
+        Integer seats_booked = booking.getSeats_booked();
+
+        Show showinfo = this.showRepository.findByShowId(booking.getShow_id().getId());
+        Integer refund_amount = seats_booked * showinfo.getPrice();
+        System.out.println("Cancelling booking :"+booking.toString());
+
+        // Return the booking amount to the wallet.
+        if (!this.WalletTransaction(booking.getUser_id(), false, refund_amount)) {
+            return false;
+        }
+
+        // Return seats corresponding to these bookings to the available pool of show
+        System.out.println("Cancelling booking, returning seat count :"+seats_booked);
+        showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
+        this.showRepository.save(showinfo);
+        return true;
+    }
     /**
      * Utility method for performing booking refund operation
      * It performs:
