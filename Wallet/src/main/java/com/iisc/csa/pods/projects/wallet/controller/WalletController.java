@@ -24,21 +24,25 @@ public class WalletController {
     @Value("${DOCKER_RUNNING:No}")
     private String dockerStatus;
 
-    // Since each of the microservices that are part of this project have separate in-memory database entities,
-    // interaction between these microservices need to be done over HTTP/Rest request.
-    // URIs for the doing the same.
+    /**
+     * Since each of the microservices that are part of this project have separate in-memory database entities,
+     * interaction between these microservices need to be done over HTTP/Rest request.
+     * URIs for the doing the same.<br/>
+     *
+     * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
+     */
     final String user_check_uri_docker = "http://host.docker.internal:8080/users/{user_id}";
     final String user_check_uri_localdev = "http://localhost:8080/users/{user_id}";
 
     /**
-     * Endpoint for GET /wallets/{user_id}
-     * Endpoint requirement
+     * <b><u>Endpoint requirement:</u>  1. GET /wallets/{user_id}</b>
      * <p>
-     *    GET /wallets/{user_id}
-     *    This endpoint gets the wallet details for the user with ID user_id.
+     *    This endpoint gets the wallet details for the user with ID user_id. <br/><br/>
+     *
      *    Response JSON payload is {“user_id:” Integer, “balance”: Integer} with HTTP status
-     *    code 200 (OK) if the user has a wallet.
-     *    If the user doesn’t have a wallet, return HTTP status code 404 (Not Found).
+     *    code 200 (OK) if the user has a wallet.<br/><br/>
+     *
+     *    If the user doesn’t have a wallet, return HTTP status code 404 (Not Found).<br/>
      * </p>
      *
      * @param user_id user_id for associated wallet.
@@ -60,19 +64,22 @@ public class WalletController {
     }
 
     /**
-     * Endpoint method for PUT /wallets/{user_id}
-     * Endpoint requirement
+     * <b><u>Endpoint requirement:</u>  2. PUT /wallets/{user_id}</b>
      * <p>
-     * PUT /wallets/{user_id}
-     *    Request JSON payload of the form {“action”: “debit”/“credit”, "amount": Integer}
+     *    Request JSON payload of the form {“action”: “debit”/“credit”, "amount": Integer}<br/><br/>
+     *
      *    If the mentioned user does not currently have a wallet, then create a wallet for them,
-     *    initialize its balance to zero, and proceed with the remaining steps below.
-     *    This endpoint debits/credits the specified amount to the user’s wallet balance.
+     *    initialize its balance to zero, and proceed with the remaining steps below.<br/><br/>
+     *
+     *    This endpoint debits/credits the specified amount to the user’s wallet balance.<br/><br/>
+     *
      *    If the action requested is a debit, and there is insufficient balance, then do not update
-     *    the balance and return HTTP status code 400 (Bad Request).
+     *    the balance and return HTTP status code 400 (Bad Request).<br/><br/>
+     *
      *    In all other cases, return response JSON payload {“user_id”: Integer, “balance”:
-     *    Integer}, where “balance” is the updated balance, with HTTP status code 200 (OK).
+     *    Integer}, where “balance” is the updated balance, with HTTP status code 200 (OK).<br/>
      * </p>
+     *
      * @param payload Payload of WalletPutPayload type to share action(debit/credit) and amount
      * @param user_id user_id for associated wallet.
      * @return HTTP status code 200 (OK) on success and 400(Bad Request) on insufficient wallet balance.
@@ -90,6 +97,7 @@ public class WalletController {
                  */
                 try {
                     RestTemplate restTemplate = new RestTemplate();
+                    /* Docker and non-docker URI difference handling. */
                     String query_url = dockerStatus.equals("Yes") ? user_check_uri_docker : user_check_uri_localdev;
                     restTemplate.getForObject(query_url, String.class, user_id);
                 } catch (HttpClientErrorException e) {
@@ -128,14 +136,15 @@ public class WalletController {
     }
 
     /**
-     * Endpoint method for DELETE /wallets/{user_id}
-     * Endpoint requirement:
+     * <b><u>Endpoint requirement:</u>  3. DELETE /wallets/{user_id}</b>
      * <p>
-     *     DELETE /wallets/{user_id}
-     *       Deletes the wallet of the user with ID user_id.
-     *       Upon successful deletion send a HTTP status code 200 (OK).
-     *       If the user does not have a wallet, return an HTTP status code 404 (Not Found).
+     *       Deletes the wallet of the user with ID user_id.<br/><br/>
+     *
+     *       Upon successful deletion send a HTTP status code 200 (OK).<br/><br/>
+     *
+     *       If the user does not have a wallet, return an HTTP status code 404 (Not Found).<br/>
      * </p>
+     *
      * @param user_id User identifier for associated wallet.
      * @return HTTP status code 200 (OK) on success and 404(Not Found) on no existing wallet.
      */
@@ -155,12 +164,11 @@ public class WalletController {
     }
 
     /**
-     * Endpoint method for DELETE /wallets
-     * Endpoint requirements:
+     * <b><u>Endpoint requirement:</u>  4. DELETE /wallets</b>
      * <p>
-     *     DELETE /wallets
-     *       This endpoint deletes the wallets of all users, and returns HTTP status code 200 (OK).
+     *       This endpoint deletes the wallets of all users, and returns HTTP status code 200 (OK).<br/>
      * </p>
+     *
      * @return return HTTP status code 200 (OK) always
      */
     @DeleteMapping()

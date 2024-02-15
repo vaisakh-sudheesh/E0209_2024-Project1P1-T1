@@ -20,17 +20,17 @@ public class UserController {
 
 
     /**
-     * Endpoint requirement:
+     * <b><u>Endpoint requirement:</u>  1. POST /users</b>
      * <p>
-     *      POST /users
      *          Request JSON payload: {“name”: String, “email”: String}
      *          This endpoint creates a new user with the given name and email and an
-     *          auto-generated id.<br/>
+     *          auto-generated id.<br/><br/>
      *
      *          If a user with the given email address already exists then return HTTP status code
      *          400 (Bad Request), else return HTTP status code 201 (Created) with the JSON
      *          response {“id”: Integer, “name”: String, “email”: String}<br/>
      * </p>
+     *
      * @param postReq JSON payload with user info for account creation
      * @return HTTP/Created(201) with JSON payload of user info in case of success; HTTP/BadRequest(400) on error
      */
@@ -46,9 +46,8 @@ public class UserController {
     }
 
     /**
-     * Endpoint requirement:
+     * <b><u>Endpoint requirement:</u>  2. GET /users/{user_id}</b>
      * <p>
-     *     GET /users/{user_id}
      *       This endpoint gets the details of the user with ID user_id. <br/><br/>
      *
      *       Response JSON payload: {“id”: Integer, “name”: String, “email”: String} with HTTP
@@ -56,6 +55,7 @@ public class UserController {
      *
      *        If the user doesn’t exist, return HTTP 404 (Not Found).<br/>
      * </p>
+     *
      * @param user_id UserID to be queried
      * @return HTTP/OK(200) with JSON payload of user info; HTTP/NotFound(404) on account not existing.
      */
@@ -75,16 +75,16 @@ public class UserController {
     }
 
     /**
-     * Endpoint requirement:
+     * <b><u>Endpoint requirement:</u>  3. DELETE /users/{user_id}</b>
      * <p>
-     *     DELETE /users/{user_id}
      *       This endpoint deletes the user record with the given user_id and also invokes the
      *       DELETE /bookings/users/{user_id} endpoint on the Booking service and DELETE
      *       /wallets/{user_id} endpoint on the Wallet service.<br/><br/>
      *
      *       Upon successful deletion, return HTTP 200 (OK) status code. If the user doesn’t
-     *       exist, return HTTP 404 (Not Found).<br/><br/>
+     *       exist, return HTTP 404 (Not Found).<br/>
      * </p>
+     *
      * @param user_id UserID to be deleted
      * @return HTTP/OK(200) on successful deletion; HTTP/NotFound(404) on account not existing.
      */
@@ -103,13 +103,13 @@ public class UserController {
     }
 
     /**
-     * Endpoint requirement:
+     * <b><u>Endpoint requirement:</u>  4. DELETE /users</b>
      * <p>
-     *     DELETE /users
      *       This endpoint deletes all user records (and hence all their bookings also). Always
      *       returns HTTP code 200 (OK). Basically, this end-point returns the states of all the
      *       services to their initial states.<br/>
      * </p>
+     *
      * @return HTTP/OK(200) always
      */
     @DeleteMapping()

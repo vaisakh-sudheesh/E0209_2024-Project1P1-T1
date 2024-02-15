@@ -33,9 +33,9 @@ public class BookingController {
 
 
     /**
-     * <b><u>Endpoint Requirement:</u></b>
+     * <b><u>Endpoint Requirement:</u> 1. GET /theatres</b>
      * <p>
-     *     1. GET /theatres
+     *
      *        This endpoint returns the list of all available theatres.<br/><br/>
      *
      *        Response JSON payload: [{“id”: Integer, “name”: String, “location”: String}] with
@@ -94,8 +94,8 @@ public class BookingController {
      */
     @GetMapping("/shows/{show_id}")
     ResponseEntity<?> getShows(@PathVariable Integer show_id) {
+        // Check for validity of show_id prior to fetching details
         if (this.showRepository.existsById(show_id)) {
-            // Check for validity of show_id prior to fetching details
             Show show = this.showRepository.findByShowId(show_id);
             return ResponseEntity.ok(show);
         } else{
@@ -175,13 +175,15 @@ public class BookingController {
         // Check for availability of seat
         Show show_details = this.showRepository.findByShowId(bookingreq.getShow_id());
         if (show_details.getSeats_available() < bookingreq.getSeats_booked()) {
-            System.out.println("Not enough seats available"+show_details.getSeats_available()+" for a request of "+bookingreq.getSeats_booked());
+            System.out.println("Not enough seats available"+show_details.getSeats_available()+
+                    " for a request of "+bookingreq.getSeats_booked());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        //// Special case handling: Handle 0 booking request case
+        // Special case handling: Handle 0 booking request case
         if (bookingreq.getSeats_booked() <= 0 ) {
-            System.out.println("Attempting to book for zero or negative number of seats -  "+bookingreq.getSeats_booked());
+            System.out.println("Attempting to book for zero or negative number of seats -  "+
+                    bookingreq.getSeats_booked());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -218,9 +220,11 @@ public class BookingController {
      */
     @DeleteMapping("/bookings/users/{user_id}")
     ResponseEntity<?> deleteUsers(@PathVariable Integer user_id) {
+        // Sanity check for the user_id parameter
         if (!this.bookingRepository.existsByUser_id(user_id)){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
         // Now handle the case of return of seats and refund
         List<Booking> bookings = this.bookingRepository.findByUser_id(user_id);
 
@@ -259,9 +263,12 @@ public class BookingController {
     @DeleteMapping("/bookings/users/{user_id}/shows/{show_id}")
     ResponseEntity<?> deleteUsersShows(@PathVariable Integer user_id, @PathVariable Integer show_id) {
         Show show = this.showRepository.findByShowId(show_id);
+
+        // Sanity check of arguments prior to processing
         if (!this.bookingRepository.existsByUser_idAndShow_id(user_id, show)){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
         // Now handle the case of return of seats and refund
         List<Booking> bookings = this.bookingRepository.findAllByUser_idAndShow_id(user_id, show);
 
