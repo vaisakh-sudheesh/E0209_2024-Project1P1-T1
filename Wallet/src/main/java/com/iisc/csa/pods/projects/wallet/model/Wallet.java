@@ -13,13 +13,20 @@ import lombok.Data;
 @Data
 @Table(name = "wallet")
 public class Wallet {
+    /**
+     * Primary key - ID field for Wallet entity.<br/><br/>
+     */
     @Id
     @Column(name = "user_id")
     Integer user_id;
 
+    /**
+     * Balance amount for the associated wallet
+     */
     @Column(name = "balance")
     Integer balance;
 
+    // Constructors
     public Wallet(){}
 
     public Wallet(Integer user_id_, Integer balance_){

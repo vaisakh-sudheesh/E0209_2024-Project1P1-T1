@@ -41,6 +41,7 @@ public class UserTable {
     @Column(name="email", unique=true)
     private String email;
 
+    // Constructors
     public UserTable(){}
     public UserTable(String name_, String email_ ) {
         this.name = name_;
