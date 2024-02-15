@@ -234,11 +234,12 @@ public class BookingController {
      */
     @DeleteMapping("/bookings/users/{user_id}/shows/{show_id}")
     ResponseEntity<?> deleteUsersShows(@PathVariable Integer user_id, @PathVariable Integer show_id) {
-        if (!this.bookingRepository.existsByUser_idAndShow_id(user_id, show_id)){
+        Show show = this.showRepository.findByShowId(show_id);
+        if (!this.bookingRepository.existsByUser_idAndShow_id(user_id, show)){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         // Now handle the case of return of seats and refund
-        List<Booking> bookings = this.bookingRepository.findAllByUser_idAndShow_id(user_id, show_id);
+        List<Booking> bookings = this.bookingRepository.findAllByUser_idAndShow_id(user_id, show);
 
         // Process each booking and perform refunds and return of seats
         for (Booking booking : bookings) {
@@ -246,6 +247,7 @@ public class BookingController {
 
             Show showinfo = this.showRepository.findByShowId(booking.getShow_id().getId());
             Integer refund_amount = seats_booked * showinfo.getPrice();
+            System.out.println("Cancelling booking :"+booking.toString());
 
             // Return the booking amount to the wallet.
             if (!this.WalletTransaction(user_id, false, refund_amount)) {
@@ -253,15 +255,17 @@ public class BookingController {
                  * TODO/BUG: Failure point here, in case one of the transaction failed, it will prevent removal of rows.
                  *  Fix it by removing each row on successful completion rather than failing in between.
                  */
+                System.out.println("Cancelling booking failed");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
             // Return seats corresponding to these bookings to the available pool of show
+            System.out.println("Cancelling booking, returning seat count :"+seats_booked);
             showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
             this.showRepository.save(showinfo);
         }
 
-        this.bookingRepository.deleteAllByUser_idAndShow_id(user_id, show_id);
+        this.bookingRepository.deleteAllByUser_idAndShow_id(user_id, show);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
