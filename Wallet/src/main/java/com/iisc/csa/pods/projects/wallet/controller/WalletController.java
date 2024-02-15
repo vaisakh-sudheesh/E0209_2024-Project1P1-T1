@@ -91,7 +91,7 @@ public class WalletController {
                 try {
                     RestTemplate restTemplate = new RestTemplate();
                     String query_url = dockerStatus.equals("Yes") ? user_check_uri_docker : user_check_uri_localdev;
-                    String result = restTemplate.getForObject(query_url, String.class, user_id);
+                    restTemplate.getForObject(query_url, String.class, user_id);
                 } catch (HttpClientErrorException e) {
                     if (e.getStatusCode().is4xxClientError()) {
                         System.out.println("User check failed");
@@ -120,7 +120,7 @@ public class WalletController {
 
             /* Update record and return JSON payload with HTTP/OK status */
             this.walletRepo.save(existingWallet);
-            return new ResponseEntity<Wallet>(existingWallet, HttpStatus.OK);
+            return new ResponseEntity<>(existingWallet, HttpStatus.OK);
 
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

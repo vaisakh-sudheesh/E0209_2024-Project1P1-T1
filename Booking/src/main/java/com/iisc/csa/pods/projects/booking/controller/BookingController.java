@@ -164,7 +164,7 @@ public class BookingController {
             String user_check_uri = dockerStatus.equals("Yes") ?
                     "http://host.docker.internal:8080/users/{user_id}" :
                     "http://localhost:8080/users/{user_id}";
-            String result = restTemplate.getForObject(user_check_uri, String.class, bookingreq.getUser_id());
+            restTemplate.getForObject(user_check_uri, String.class, bookingreq.getUser_id());
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().is4xxClientError()) {
                 System.out.println("User check failed");
