@@ -31,8 +31,8 @@ public class UserController {
      *          400 (Bad Request), else return HTTP status code 201 (Created) with the JSON
      *          response {“id”: Integer, “name”: String, “email”: String}<br/>
      * </p>
-     * @param postReq
-     * @return
+     * @param postReq JSON payload with user info for account creation
+     * @return HTTP/Created(201) with JSON payload of user info in case of success; HTTP/BadRequest(400) on error
      */
     @PostMapping(consumes = "application/json")
     public ResponseEntity<UserTable> postUsers(@RequestBody UserTable postReq) {
@@ -49,14 +49,15 @@ public class UserController {
      * Endpoint requirement:
      * <p>
      *     GET /users/{user_id}
-     *       This endpoint gets the details of the user with ID user_id.
+     *       This endpoint gets the details of the user with ID user_id. <br/><br/>
+     *
      *       Response JSON payload: {“id”: Integer, “name”: String, “email”: String} with HTTP
-     *       status code 200 (OK).<br/>
+     *       status code 200 (OK).<br/><br/>
      *
      *        If the user doesn’t exist, return HTTP 404 (Not Found).<br/>
      * </p>
-     * @param user_id
-     * @return
+     * @param user_id UserID to be queried
+     * @return HTTP/OK(200) with JSON payload of user info; HTTP/NotFound(404) on account not existing.
      */
     @GetMapping("/{user_id}")
     public ResponseEntity<UserTable> getUser_id (@PathVariable Integer user_id){
@@ -79,13 +80,13 @@ public class UserController {
      *     DELETE /users/{user_id}
      *       This endpoint deletes the user record with the given user_id and also invokes the
      *       DELETE /bookings/users/{user_id} endpoint on the Booking service and DELETE
-     *       /wallets/{user_id} endpoint on the Wallet service.<br/>
+     *       /wallets/{user_id} endpoint on the Wallet service.<br/><br/>
      *
      *       Upon successful deletion, return HTTP 200 (OK) status code. If the user doesn’t
-     *       exist, return HTTP 404 (Not Found).<br/>
+     *       exist, return HTTP 404 (Not Found).<br/><br/>
      * </p>
-     * @param user_id
-     * @return
+     * @param user_id UserID to be deleted
+     * @return HTTP/OK(200) on successful deletion; HTTP/NotFound(404) on account not existing.
      */
     @DeleteMapping("/{user_id}")
     public ResponseEntity<?> deleteUser_id(@PathVariable Integer user_id) {
@@ -109,7 +110,7 @@ public class UserController {
      *       returns HTTP code 200 (OK). Basically, this end-point returns the states of all the
      *       services to their initial states.<br/>
      * </p>
-     * @return
+     * @return HTTP/OK(200) always
      */
     @DeleteMapping()
     public ResponseEntity<?> deleteAll() {
