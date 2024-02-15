@@ -306,6 +306,7 @@ public class BookingController {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
         }
+        // TODO: Removal of booking is not done
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -330,6 +331,8 @@ public class BookingController {
             showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
             this.showRepository.save(showinfo);
         }
+
+        // TODO: Now the booking entry can be safely removed.
 
         return result;
     }

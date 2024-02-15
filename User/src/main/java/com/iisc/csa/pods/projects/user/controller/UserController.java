@@ -92,6 +92,8 @@ public class UserController {
     public ResponseEntity<?> deleteUser_id(@PathVariable Integer user_id) {
         try {
             if( userRepo.existsById(user_id)) {
+                // TODO: Invoke bookings delete of user_id
+                // TODO: Invoke wallet delete for user_id
                 userRepo.deletebyId(user_id);
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
@@ -114,6 +116,8 @@ public class UserController {
      */
     @DeleteMapping()
     public ResponseEntity<?> deleteAll() {
+        // TODO: Invoke bookings delete of user_id
+        // TODO: Invoke wallet delete for user_id
         userRepo.deleteAll();
         return new ResponseEntity<>(HttpStatus.OK);
     }
