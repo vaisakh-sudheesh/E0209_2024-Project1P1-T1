@@ -1,5 +1,5 @@
 FROM openjdk:17-jdk
-EXPOSE 8082
+ENV PODSPROJECT_WALLET_SERV_PORT=8080
 
 # Setup working directory
 WORKDIR /app

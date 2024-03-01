@@ -1,5 +1,5 @@
 FROM openjdk:17-jdk
-EXPOSE 8080
+ENV PODSPROJECT_USER_SERV_PORT=8080
 
 # Setup working directory
 WORKDIR /app
