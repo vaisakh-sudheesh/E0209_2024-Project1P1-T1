@@ -3,66 +3,22 @@
  */
 package com.iisc.csa.pods.projects.booking.controller;
 
+import com.iisc.csa.pods.projects.booking.exception.ShowInfoException;
+import com.iisc.csa.pods.projects.booking.exception.TheatreInfoException;
+import com.iisc.csa.pods.projects.booking.exception.UserValidationException;
+import com.iisc.csa.pods.projects.booking.exception.WalletOperationException;
 import com.iisc.csa.pods.projects.booking.model.*;
-import com.iisc.csa.pods.projects.booking.repository.BookingRepository;
-import com.iisc.csa.pods.projects.booking.repository.ShowRepository;
-import com.iisc.csa.pods.projects.booking.repository.TheatreRepository;
+import com.iisc.csa.pods.projects.booking.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class BookingController {
-    // Repository instances for accessing theatre, shows and booking entities
     @Autowired
-    private TheatreRepository theatreRepository;
-    @Autowired
-    private ShowRepository showRepository;
-    @Autowired
-    private BookingRepository bookingRepository;
-
-    ////////////////////////////////////// URI Management //////////////////////////////////////
-    /**
-     * Since each of the microservices that are part of this project have separate in-memory database entities,
-     * interaction between these microservices need to be done over HTTP/Rest request.
-     * URIs for the doing the same.<br/>
-     *
-     * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
-     */
-    @Value("${DOCKER_RUNNING:No}")
-    private String dockerStatus;
-
-    /**
-     * Helper methods and fields for user microservice URI
-     */
-    private String getUserUriBase(){
-        String user_uri_docker = "http://host.docker.internal:8080/";
-        String user_uri_localdev = "http://localhost:8080/";
-        return (dockerStatus.equals("Yes") ? user_uri_docker : user_uri_localdev) ;
-    }
-    private String getUserCheckUri() {
-        return getUserUriBase() + "users/{user_id}";
-    }
-
-    /**
-     * Helper methods and fields for wallet microservice URI
-     */
-    private String getWalletUriBase (){
-
-        String wallet_uri_docker = "http://host.docker.internal:8082/";
-        String wallet_uri_localdev = "http://localhost:8082/";
-        return (dockerStatus.equals("Yes") ? wallet_uri_docker : wallet_uri_localdev);
-    }
-    private String getWalletUserCheckUri () {
-        return getWalletUriBase() + "wallets/{user_id}";
-    }
+    BookingService bookingService;
 
     ////////////////////////////////////// Controller Endpoints //////////////////////////////////////
     /**
@@ -79,8 +35,7 @@ public class BookingController {
      */
     @GetMapping("/theatres")
     ResponseEntity<?> getTheatres(){
-        List<Theatre> theatres = this.theatreRepository.findAll();
-        return ResponseEntity.ok(theatres);
+        return ResponseEntity.ok(bookingService.getTheatres());
     }
 
     /**
@@ -101,11 +56,10 @@ public class BookingController {
      */
     @GetMapping("/shows/theatres/{theater_id}")
     ResponseEntity<?> getShowsTheatres(@PathVariable Integer theater_id) {
-        if (this.theatreRepository.existsById(theater_id)) {
-            // Check for validity of provided theatre_id
-            List<Show> shows = this.showRepository.findByTheatre_id(theater_id);
+        try {
+            List<Show> shows = bookingService.getShowsTheatres(theater_id);
             return ResponseEntity.ok(shows);
-        } else {
+        } catch (TheatreInfoException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -127,11 +81,9 @@ public class BookingController {
      */
     @GetMapping("/shows/{show_id}")
     ResponseEntity<?> getShows(@PathVariable Integer show_id) {
-        // Check for validity of show_id prior to fetching details
-        if (this.showRepository.existsById(show_id)) {
-            Show show = this.showRepository.findByShowId(show_id);
-            return ResponseEntity.ok(show);
-        } else{
+        try {
+            return ResponseEntity.ok(bookingService.getShows(show_id));
+        } catch (TheatreInfoException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -151,8 +103,7 @@ public class BookingController {
      */
     @GetMapping("/bookings/users/{user_id}")
     ResponseEntity<?> getBookingsUsers(@PathVariable Integer user_id) {
-        List<Booking> bookings = this.bookingRepository.findByUser_id(user_id);
-        return ResponseEntity.ok(bookings);
+        return ResponseEntity.ok(bookingService.getBookingsUsers(user_id));
     }
 
     /**
@@ -183,55 +134,12 @@ public class BookingController {
      */
     @PostMapping("/bookings")
     ResponseEntity<?> postBookings (@RequestBody BookingPayload bookingreq) {
-        // Check for validity of show_id
-        if (!this.showRepository.existsById(bookingreq.getShow_id())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        // Check if the user_id is a valid one by RestAPI call to User service
         try {
-            RestTemplate restTemplate = new RestTemplate();
-            // Since each of the microservices in this project have separate in-memory database entities,
-            // interaction between these microservices need to be done over HTTP/Rest request.
-            // URIs for the doing the same.
-            String user_check_uri = getUserCheckUri();
-            restTemplate.getForObject(user_check_uri, String.class, bookingreq.getUser_id());
-        } catch (HttpClientErrorException e) {
-            if (e.getStatusCode().is4xxClientError()) {
-                System.out.println("User check failed");
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-        }
-
-        // Check for availability of seat
-        Show show_details = this.showRepository.findByShowId(bookingreq.getShow_id());
-        if (show_details.getSeats_available() < bookingreq.getSeats_booked()) {
-            System.out.println("Not enough seats available"+show_details.getSeats_available()+
-                    " for a request of "+bookingreq.getSeats_booked());
+            bookingService.transact(bookingreq);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-
-        // Special case handling: Handle 0 booking request case
-        if (bookingreq.getSeats_booked() <= 0 ) {
-            System.out.println("Attempting to book for zero or negative number of seats -  "+
-                    bookingreq.getSeats_booked());
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        // Perform wallet transaction
-        Integer ticket_cost = bookingreq.getSeats_booked() * show_details.getPrice();
-        if (!this.WalletTransaction(bookingreq.getUser_id(), true, ticket_cost)) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        // Update Booking table for the successful booking
-        this.bookingRepository.save(new Booking(show_details, bookingreq.getUser_id(), bookingreq.getSeats_booked()));
-
-        // Update available seat counter
-        show_details.setSeats_available(show_details.getSeats_available() - bookingreq.getSeats_booked());
-        this.showRepository.save(show_details);
-
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -251,25 +159,14 @@ public class BookingController {
      */
     @DeleteMapping("/bookings/users/{user_id}")
     ResponseEntity<?> deleteUsers(@PathVariable Integer user_id) {
-        // Sanity check for the user_id parameter
-        if (!this.bookingRepository.existsByUser_id(user_id)){
+        try {
+            bookingService.deleteUsers(user_id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch(UserValidationException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (WalletOperationException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-
-        // Now handle the case of return of seats and refund
-        List<Booking> bookings = this.bookingRepository.findByUser_id(user_id);
-
-        // Process each booking and perform refunds and return of seats
-        for (Booking booking : bookings) {
-            if (!this.CancelBooking(booking)) {
-                System.out.println("deleteUsers: Cancelling booking failed");
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-            this.bookingRepository.deleteById(booking.getId());
-        }
-        // this delete may not be required, as each rows are removed iteratively
-        //this.bookingRepository.deleteAllByUser_id(user_id);
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -290,27 +187,14 @@ public class BookingController {
      */
     @DeleteMapping("/bookings/users/{user_id}/shows/{show_id}")
     ResponseEntity<?> deleteUsersShows(@PathVariable Integer user_id, @PathVariable Integer show_id) {
-        Show show = this.showRepository.findByShowId(show_id);
-
-        // Sanity check of arguments prior to processing
-        if (!this.bookingRepository.existsByUser_idAndShow_id(user_id, show)){
+        try {
+            bookingService.deleteUsersShows(user_id,show_id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (ShowInfoException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (WalletOperationException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-
-        // Now handle the case of return of seats and refund
-        List<Booking> bookings = this.bookingRepository.findAllByUser_idAndShow_id(user_id, show);
-
-        // Process each booking and perform refunds and return of seats
-        for (Booking booking : bookings) {
-            if (!this.CancelBooking(booking)) {
-                System.out.println("deleteUsersShows: Cancelling booking failed");
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-            this.bookingRepository.deleteById(booking.getId());
-        }
-        // this delete may not be required, as each rows are removed iteratively
-        //this.bookingRepository.deleteAllByUser_idAndShow_id(user_id, show);
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -324,82 +208,11 @@ public class BookingController {
      */
     @DeleteMapping("/bookings")
     ResponseEntity<?> deleteBookings() {
-        List<Booking> bookings = this.bookingRepository.findAll();
-        for (Booking booking : bookings) {
-            if (!this.CancelBooking(booking)) {
-                System.out.println("deleteBookings: Cancelling booking failed");
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-            this.bookingRepository.deleteById(booking.getId());
-        }
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    ////////////////////////////////////// Helper methods //////////////////////////////////////
-    /**
-     * Helper method for Canceling a given booking
-     *
-     * @param booking Instance of booking to be canceled
-     * @return True on successful cancellation; false otherwise
-     */
-    boolean CancelBooking (Booking booking){
-        boolean result = true;
-        Integer seats_booked = booking.getSeats_booked();
-
-        Show showinfo = this.showRepository.findByShowId(booking.getShow_id().getId());
-        Integer refund_amount = seats_booked * showinfo.getPrice();
-
-        // Return the booking amount to the wallet.
-        if (!this.WalletTransaction(booking.getUser_id(), false, refund_amount)) {
-            result = false;
-        } else {// Return seats corresponding to these bookings to the available pool of show
-            //System.out.println("Cancelling booking, returning seat count :"+seats_booked);
-            showinfo.setSeats_available(showinfo.getSeats_available() + seats_booked);
-            this.showRepository.save(showinfo);
-        }
-        return result;
-    }
-    /**
-     * Utility method for performing booking refund operation
-     * It performs:
-     *   - Wallet Credit of amount
-     *   - Returning cancelled seats to system.
-     *
-     * @param user_id_ user id to which wallet transaction is to be performed.
-     * @return True on successful completion, false in case of any failure in wallet transactions.
-     */
-    boolean WalletTransaction(Integer user_id_ , boolean isDebit, Integer amount) {
-        // Wallet transaction
         try {
-            RestTemplate restTemplate = new RestTemplate();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("action", isDebit ? "debit":"credit");
-            requestBody.put("amount", amount);
-
-            // Create an HttpEntity object with the request body and headers
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-            // Define URI variables for the user ID
-            Map<String, String> uriVariables = new HashMap<>();
-            uriVariables.put("user_id", user_id_.toString());
-
-            // Make the HTTP/PUT request
-            String wallet_action_uri = getWalletUserCheckUri();
-            ResponseEntity<String> response = restTemplate.exchange(wallet_action_uri, HttpMethod.PUT, entity, String.class, uriVariables);
-
-            if (response.getStatusCode().is2xxSuccessful())
-                return true;
-
-        } catch (HttpClientErrorException e) {
-            System.out.println("Wallet transaction failed with " + e.getStatusCode());
-            return false;
+            bookingService.deleteBookings();
+            return new ResponseEntity<>(HttpStatus.OK);
+        }  catch (WalletOperationException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        return false;
     }
-
-
 }
