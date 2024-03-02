@@ -1,5 +1,4 @@
 FROM openjdk:17-jdk
-ENV PODSPROJECT_USER_SERV_PORT=8080
 
 # Setup working directory
 WORKDIR /app
@@ -10,4 +9,4 @@ COPY pom.xml /app/pom.xml
 
 # Environment variable used in code to detect Docker/Non-docker execution
 ENV DOCKER_RUNNING=Yes
-ENTRYPOINT ["./mvnw", "spring-boot:run"]
+ENTRYPOINT ["./mvnw", "-Dspring-boot.run.arguments=\"--spring.profiles.active=docker\"", "spring-boot:run"]
