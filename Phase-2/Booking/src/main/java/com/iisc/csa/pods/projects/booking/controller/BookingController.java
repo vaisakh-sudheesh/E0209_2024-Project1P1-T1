@@ -57,9 +57,9 @@ public class BookingController {
     @GetMapping("/shows/theatres/{theater_id}")
     ResponseEntity<?> getShowsTheatres(@PathVariable Integer theater_id) {
         try {
-            List<Show> shows = bookingService.getShowsTheatres(theater_id);
-            return ResponseEntity.ok(shows);
-        } catch (TheatreInfoException e) {
+            return ResponseEntity.ok(bookingService.getShowsTheatres(theater_id));
+        } catch (Exception e) {
+            System.out.println("getShowsTheatres: Exception "+ e.toString());
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -83,7 +83,8 @@ public class BookingController {
     ResponseEntity<?> getShows(@PathVariable Integer show_id) {
         try {
             return ResponseEntity.ok(bookingService.getShows(show_id));
-        } catch (TheatreInfoException e) {
+        } catch (Exception e) {
+            System.out.println("getShows: Exception "+ e.toString());
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -138,6 +139,7 @@ public class BookingController {
             bookingService.transact(bookingreq);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
+            System.out.println("postBookings: Exception "+ e.toString());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -163,8 +165,10 @@ public class BookingController {
             bookingService.deleteUsers(user_id);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch(UserValidationException e) {
+            System.out.println("deleteUsers: UserValidationException "+ e.toString());
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (WalletOperationException e) {
+        } catch (Exception e) {
+            System.out.println("deleteUsers: Exception "+ e.toString());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -191,8 +195,10 @@ public class BookingController {
             bookingService.deleteUsersShows(user_id,show_id);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (ShowInfoException e) {
+            System.out.println("deleteUsersShows: ShowInfoException "+ e.toString());
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (WalletOperationException e) {
+        } catch (Exception e) {
+            System.out.println("deleteUsersShows: Exception "+ e.toString());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -212,6 +218,7 @@ public class BookingController {
             bookingService.deleteBookings();
             return new ResponseEntity<>(HttpStatus.OK);
         }  catch (WalletOperationException e) {
+            System.out.println("deleteBookings: WalletOperationException "+ e.toString());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }

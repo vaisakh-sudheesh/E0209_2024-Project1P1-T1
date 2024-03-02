@@ -38,10 +38,10 @@ public class UserController {
     @PostMapping(consumes = "application/json")
     public ResponseEntity<UserTable> postUsers(@RequestBody UserTable postReq) {
         try {
-            UserTable user = userService.createUser(postReq);
-            return new ResponseEntity<>(user, HttpStatus.CREATED);
+            return new ResponseEntity<>(userService.createUser(postReq), HttpStatus.CREATED);
         }
         catch (Exception e) {
+            System.out.println("postUsers: Exception "+ e.toString());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -66,8 +66,10 @@ public class UserController {
             UserTable userdata = userService.getUser_id((user_id));
             return ResponseEntity.ok(userdata);
         } catch (UserOperationException e) {
+            System.out.println("getUser_id: UserOperationException "+ e.toString());
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
+            System.out.println("getUser_id: Exception "+ e.toString());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -92,8 +94,10 @@ public class UserController {
             userService.deleteUser_id(user_id);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (UserOperationException e) {
+            System.out.println("deleteUser_id: UserOperationException "+ e.toString());
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
+            System.out.println("deleteUser_id: Exception "+ e.toString());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
