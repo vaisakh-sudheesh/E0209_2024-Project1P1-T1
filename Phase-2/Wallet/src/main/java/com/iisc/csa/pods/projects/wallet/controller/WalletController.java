@@ -4,9 +4,12 @@
  */
 package com.iisc.csa.pods.projects.wallet.controller;
 
+import com.iisc.csa.pods.projects.wallet.exception.UserValidationException;
+import com.iisc.csa.pods.projects.wallet.exception.WalletOperationException;
 import com.iisc.csa.pods.projects.wallet.model.Wallet;
 import com.iisc.csa.pods.projects.wallet.model.WalletPutPayload;
 import com.iisc.csa.pods.projects.wallet.repository.WalletRepository;
+import com.iisc.csa.pods.projects.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -19,32 +22,7 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping("/wallets")
 public class WalletController {
     @Autowired
-    WalletRepository walletRepo;
-
-    ////////////////////////////////////// URI Management //////////////////////////////////////
-    /**
-     * Since each of the microservices that are part of this project have separate in-memory database entities,
-     * interaction between these microservices need to be done over HTTP/Rest request.
-     * URIs for the doing the same.<br/>
-     *
-     * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
-     */
-    @Value("${DOCKER_RUNNING:No}")
-    private String dockerStatus;
-
-    /**
-     * Helper methods and fields for user microservice URI
-     */
-    private String getUserUriBase(){
-
-        String user_uri_docker = "http://host.docker.internal:8080/";
-        String user_uri_localdev = "http://localhost:8080/";
-        return (dockerStatus.equals("Yes") ? user_uri_docker : user_uri_localdev) ;
-    }
-    private String getUserCheckUri(){
-        return getUserUriBase() + "users/{user_id}";
-    }
-
+    WalletService walletService;
     ////////////////////////////////////// Controller Endpoints //////////////////////////////////////
     /**
      * <b><u>Endpoint requirement:</u>  1. GET /wallets/{user_id}</b>
@@ -64,12 +42,10 @@ public class WalletController {
     @GetMapping("/{user_id}")
     public ResponseEntity<Wallet> getUser_id(@PathVariable Integer user_id){
         try {
-            if (walletRepo.existsByUser_id(user_id)) {
-                Wallet wallet_data = walletRepo.findByUser_id(user_id);
-                return new ResponseEntity<>(wallet_data, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
+            Wallet wallet_data = walletService.getUser_id(user_id);
+            return new ResponseEntity<>(wallet_data, HttpStatus.OK);
+        } catch (WalletOperationException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -99,48 +75,12 @@ public class WalletController {
     @PutMapping("/{user_id}")
     public ResponseEntity<Wallet> putUser_id(@RequestBody WalletPutPayload payload, @PathVariable Integer user_id) {
         try {
-            /*
-             * Check if wallet exists or no; this may not be necessary but in case some other module or a direct API
-             * call comes, a sanity check is desirable.
-             */
-            if (!walletRepo.existsByUser_id(user_id)) {
-                /*
-                 * Check if the user_id is a valid one prior to creating wallet entry by RestAPI call to User service
-                 */
-                try {
-                    RestTemplate restTemplate = new RestTemplate();
-                    String query_url = getUserCheckUri();
-                    restTemplate.getForObject(query_url, String.class, user_id);
-                } catch (HttpClientErrorException e) {
-                    if (e.getStatusCode().is4xxClientError()) {
-                        System.out.println("User check failed");
-                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                    }
-                }
-                /* Create wallet account and load the amount and continue with rest of the operation */
-                Wallet newWallet = new Wallet(user_id,0);
-                this.walletRepo.save(newWallet);
-            }
-
-            /* Fetch the wallet account details and process the transaction */
-            Wallet existingWallet = this.walletRepo.findByUser_id(user_id);
-            if (payload.isCreditAction()) {
-                /* A credit action, hence updating balance amount */
-                existingWallet.setBalance(existingWallet.getBalance() + payload.getAmount());
-            } else if (payload.isDebitAction()){
-                /* Debit action */
-                if (existingWallet.getBalance() < payload.getAmount()) {
-                    /* Insufficient Wallet balance case */
-                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                }
-                /* Balance amount is sufficient, hence processing transaction */
-                existingWallet.setBalance(existingWallet.getBalance() - payload.getAmount());
-            }
-
-            /* Update record and return JSON payload with HTTP/OK status */
-            this.walletRepo.save(existingWallet);
-            return new ResponseEntity<>(existingWallet, HttpStatus.OK);
-
+            Wallet walletInfo = walletService.transact(payload, user_id);
+            return new ResponseEntity<>(walletInfo, HttpStatus.OK);
+        } catch (UserValidationException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (WalletOperationException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -162,13 +102,10 @@ public class WalletController {
     @DeleteMapping("/{user_id}")
     public ResponseEntity<?> deleteUser_id(@PathVariable Integer user_id) {
         try {
-            if (!this.walletRepo.existsByUser_id(user_id)){
-                /* Is the wallet existing? */
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            } else {
-                this.walletRepo.deleteByUser_id(user_id);
-                return new ResponseEntity<>(HttpStatus.OK);
-            }
+            walletService.deleteUser_id(user_id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (UserValidationException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -184,7 +121,7 @@ public class WalletController {
      */
     @DeleteMapping()
     public ResponseEntity<?> deleteAll() {
-        this.walletRepo.deleteAll();
+        walletService.deleteAll();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
