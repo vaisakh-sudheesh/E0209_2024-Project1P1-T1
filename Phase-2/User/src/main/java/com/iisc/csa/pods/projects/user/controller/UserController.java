@@ -7,19 +7,11 @@ package com.iisc.csa.pods.projects.user.controller;
 
 import com.iisc.csa.pods.projects.user.exception.UserOperationException;
 import com.iisc.csa.pods.projects.user.model.UserTable;
-import com.iisc.csa.pods.projects.user.repository.UserRepository;
 import com.iisc.csa.pods.projects.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/users")

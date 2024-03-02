@@ -8,15 +8,12 @@ import com.iisc.csa.pods.projects.wallet.exception.UserValidationException;
 import com.iisc.csa.pods.projects.wallet.exception.WalletOperationException;
 import com.iisc.csa.pods.projects.wallet.model.Wallet;
 import com.iisc.csa.pods.projects.wallet.model.WalletPutPayload;
-import com.iisc.csa.pods.projects.wallet.repository.WalletRepository;
 import com.iisc.csa.pods.projects.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+
 
 @RestController
 @RequestMapping("/wallets")
