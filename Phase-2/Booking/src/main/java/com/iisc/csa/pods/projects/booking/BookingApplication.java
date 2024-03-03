@@ -20,6 +20,15 @@ public class BookingApplication {
 		SpringApplication.run(BookingApplication.class, args);
 	}
 
+	/**
+	 * Bean to wait for Booking Database service to be up and running.
+	 *
+	 * This will help ensure that there is a delay from in case the
+	 * Booking-Database service takes sometime to initialize.
+	 *
+	 * @param dataSource
+	 * @return DatabaseStartupValidator instance
+	 */
 	@Bean
 	public DatabaseStartupValidator databaseStartupValidator (DataSource dataSource){
 		var dsv = new DatabaseStartupValidator();
@@ -28,6 +37,11 @@ public class BookingApplication {
 		return dsv;
 	}
 
+	/**
+	 * Bean to make use of DatabaseStartupValidator to wait until Booking-Database
+	 * instance is ready to connect and service calls.
+	 * @Beann
+	 */
 	@Bean
 	public static BeanFactoryPostProcessor dependsOnPostProcessor() {
 		return bf -> {

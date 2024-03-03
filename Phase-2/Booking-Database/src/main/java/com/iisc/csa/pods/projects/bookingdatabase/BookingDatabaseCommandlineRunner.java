@@ -1,3 +1,6 @@
+/**
+ * CommandLineRunner to initialize database
+ */
 package com.iisc.csa.pods.projects.bookingdatabase;
 
 import com.iisc.csa.pods.projects.bookingdatabase.model.Show;

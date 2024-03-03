@@ -1,3 +1,7 @@
+/**
+ * Service layer for interfacing between controller and repository.
+ * Includes the code serialization and ensuring synchronous database/repository update.
+ */
 package com.iisc.csa.pods.projects.user.service;
 
 import com.iisc.csa.pods.projects.user.exception.UserOperationException;

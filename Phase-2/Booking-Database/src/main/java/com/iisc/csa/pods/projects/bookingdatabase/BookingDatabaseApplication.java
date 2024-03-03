@@ -25,6 +25,9 @@ public class BookingDatabaseApplication extends SpringBootServletInitializer {
         startH2Server();
         return application.sources(BookingDatabaseApplication.class);
     }
+    /**
+     * Method to start H2 server on 8084 port for Booking Service to connect to.
+     */
     private static void startH2Server() {
         try {
             Server h2Server = Server.createTcpServer("-tcp", "-tcpAllowOthers", "-tcpPort", "8084").start();
@@ -37,9 +40,4 @@ public class BookingDatabaseApplication extends SpringBootServletInitializer {
             throw new RuntimeException("Failed to start H2 server: ", e);
         }
     }
-
-//    @Bean(initMethod = "start", destroyMethod = "stop")
-//    public Server inMemoryH2DatabaseServer() throws SQLException {
-//        return Server.createTcpServer("-tcp", "-tcpAllowOthers", "-tcpPort", "8084");
-//    }
 }
