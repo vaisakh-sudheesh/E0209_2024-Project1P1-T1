@@ -41,8 +41,8 @@ public class WalletController {
         try {
             Wallet wallet_data = walletService.getUser_id(user_id);
             return new ResponseEntity<>(wallet_data, HttpStatus.OK);
-        } catch (WalletOperationException e) {
-            System.out.println("getUser_id: WalletOperationException "+ e.toString());
+        } catch (UserValidationException e) {
+            System.out.println("getUser_id: UserValidationException "+ e.toString());
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             System.out.println("getUser_id: Exception "+ e.toString());
