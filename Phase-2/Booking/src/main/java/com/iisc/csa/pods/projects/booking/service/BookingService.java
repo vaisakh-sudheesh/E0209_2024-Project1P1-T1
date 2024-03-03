@@ -116,7 +116,7 @@ public class BookingService {
      * Transaction method to inssue booking request and communicate to other services too
      * @param bookingreq Booking request information
      */
-    public void transact(BookingPayload bookingreq){
+    public synchronized void transact(BookingPayload bookingreq){
 
         // Check for validity of show_id
         if (!this.showRepository.existsById(bookingreq.getShow_id())) {
@@ -170,7 +170,7 @@ public class BookingService {
      * Method to delete bookings from a user
      * @param user_id
      */
-    public void deleteUsers(Integer user_id) {
+    public synchronized void deleteUsers(Integer user_id) {
         // Sanity check for the user_id parameter
         if (!this.bookingRepository.existsByUser_id(user_id)){
             throw new UserValidationException(user_id);
@@ -197,7 +197,7 @@ public class BookingService {
      * @param user_id
      * @param show_id
      */
-    public void deleteUsersShows(Integer user_id, Integer show_id){
+    public synchronized void deleteUsersShows(Integer user_id, Integer show_id){
         Show show = this.showRepository.findByShowId(show_id);
 
         // Sanity check of arguments prior to processing
@@ -226,7 +226,7 @@ public class BookingService {
     /**
      * Delete all the bookings
      */
-    public void deleteBookings (){
+    public synchronized void deleteBookings (){
         List<Booking> bookings = this.bookingRepository.findAll();
         for (Booking booking : bookings) {
             if (!this.CancelBooking(booking)) {

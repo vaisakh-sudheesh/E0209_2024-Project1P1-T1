@@ -10,6 +10,7 @@ import com.iisc.csa.pods.projects.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class UserService {
 
     @Autowired
@@ -58,13 +60,21 @@ public class UserService {
 
     ////////////////////////////////////// Service Methods //////////////////////////////////////
 
-    @Transactional
-    public UserTable createUser(UserTable postReq) {
+    /**
+     * Method to create a user account
+     * @param postReq user information
+     * @return User information of created userid
+     */
+    public synchronized UserTable createUser(UserTable postReq) {
         UserTable user = userRepo.save(postReq);
         return user;
     }
 
-    @Transactional
+    /**
+     * Get information for a user-id
+     * @param user_id
+     * @return User information
+     */
     public UserTable getUser_id (Integer user_id){
         if( !userRepo.existsById(user_id)) {
             throw new UserOperationException("user_id not found");
@@ -72,8 +82,11 @@ public class UserService {
         return  userRepo.findbyId(user_id);
     }
 
-    @Transactional
-    public void deleteUser_id(Integer user_id) {
+    /**
+     * Delete a user account for a given id
+     * @param user_id
+     */
+    public synchronized void deleteUser_id(Integer user_id) {
         if( !userRepo.existsById(user_id)) {
             throw new UserOperationException("user_id not found");
         }
@@ -82,8 +95,10 @@ public class UserService {
         userRepo.deletebyId(user_id);
     }
 
-    @Transactional
-    public void deleteAll() {
+    /**
+     * Delete all user accounts.
+     */
+    public synchronized void deleteAll() {
         List<UserTable> users = this.userRepo.findAll();
         for (UserTable user : users) {
             DeleteUserBookings(user.getId());
