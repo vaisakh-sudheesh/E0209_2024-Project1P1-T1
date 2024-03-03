@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# minikube start
+minikube start
 eval $(minikube docker-env)
 
 
@@ -37,7 +37,7 @@ minikube kubectl -- expose deployment bookingservice --type=LoadBalancer --port=
 
 minikube kubectl -- create deployment walletservice --image=vaisakhp/wallet-service:v1
 minikube kubectl -- expose deployment walletservice --type=LoadBalancer --port=8080
-minikube tunnel
+minikube tunnel &
 
 # Wait for sometime for deployments to be running
 sleep 60
