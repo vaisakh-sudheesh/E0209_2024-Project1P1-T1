@@ -1,4 +1,5 @@
 FROM openjdk:17-jdk
+EXPOSE 8080
 
 # Setup working directory
 WORKDIR /app
@@ -9,7 +10,7 @@ COPY pom.xml /app/pom.xml
 
 # Environment variable used in code to detect Docker/Non-docker execution
 ENV DOCKER_RUNNING=Yes
-ENV DOCKER_URL_BOOKINGDB="vaisakh-bookingdb"
-ENV DOCKER_URL_USER="vaisakh-user"
-ENV DOCKER_URL_WALLET="vaisakh-wallet"
+ENV DOCKER_URL_BOOKINGDB="bookingdbservice"
+ENV DOCKER_URL_USER="userservice"
+ENV DOCKER_URL_WALLET="walletservice"
 ENTRYPOINT ["./mvnw", "-Dspring-boot.run.arguments=\"--spring.profiles.active=docker\"", "spring-boot:run"]
