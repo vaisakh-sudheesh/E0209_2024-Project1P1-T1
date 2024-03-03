@@ -3,38 +3,38 @@
 printf "\n\n\t\t ==== Building docker images === "
 printf "\n ## Building vaisakhp/booking-database-service ## "
 pushd Booking-Database
-docker build -t vaisakhp/booking-database-service .
+docker build -t vaisakhp/booking-database-service:v1 .
 popd
 
 printf "\n ## Building vaisakhp/user-service ## "
 pushd User
-docker build -t vaisakhp/user-service .
+docker build -t vaisakhp/user-service:v1 .
 popd
 
 printf "\n ## Building vaisakhp/wallet-service ## "
 pushd Wallet
-docker build -t vaisakhp/wallet-service .
+docker build -t vaisakhp/wallet-service:v1 .
 popd
 
 printf "\n ## Building vaisakhp/booking-service ## "
 pushd Booking
-docker build -t vaisakhp/booking-service .
+docker build -t vaisakhp/booking-service:v1 .
 popd
 
 printf "\n\n\t\t ==== Starting containers === "
 printf "\n ## Starting vaisakhp-booking-database ## "
-docker run -p 8084:8084 --detach --rm --name vaisakhp-booking-database --add-host=host.docker.internal:host-gateway vaisakhp/booking-database-service
+docker run -p 8084:8084 --detach --rm --name vaisakhp-booking-database --add-host=host.docker.internal:host-gateway vaisakhp/booking-database-service:v1
 
 printf "\n ## Starting vaisakhp-user ## "
-docker run -p 8080:8080 --detach --rm --name vaisakhp-user --add-host=host.docker.internal:host-gateway vaisakhp/user-service
+docker run -p 8080:8080 --detach --rm --name vaisakhp-user --add-host=host.docker.internal:host-gateway vaisakhp/user-service:v1
 
 printf "\n ## Starting vaisakhp-wallet ## "
-docker run -p 8082:8080 --detach --rm --name vaisakhp-wallet --add-host=host.docker.internal:host-gateway vaisakhp/wallet-service
+docker run -p 8082:8080 --detach --rm --name vaisakhp-wallet --add-host=host.docker.internal:host-gateway vaisakhp/wallet-service:v1
 
 printf "\n ## Starting vaisakhp-booking ## "
-docker run -p 8081:8080  --detach --rm --name vaisakhp-booking --add-host=host.docker.internal:host-gateway vaisakhp/booking-service
+docker run -p 8081:8080  --detach --rm --name vaisakhp-booking --add-host=host.docker.internal:host-gateway vaisakhp/booking-service:v1
 
-printf "\n\n\t\t ==== Waiting for soemtime === "
+printf "\n\n\t\t ==== Waiting for sometime === "
 sleep 30
 
 printf "\n\n\t\t ==== Running test cases === "
@@ -71,5 +71,5 @@ sleep 5
 printf "\n\n\t\t ==== Cleaning docker files === "
 ### Tear down
 docker stop vaisakhp-booking-database vaisakhp-user vaisakhp-wallet vaisakhp-booking 
-docker image rm -f vaisakhp/booking-database-service vaisakhp/user-service vaisakhp/wallet-service vaisakhp/booking-service
+docker image rm -f vaisakhp/booking-database-service:v1 vaisakhp/booking-service:v1 vaisakhp/wallet-service:v1 vaisakhp/user-service:v1
 
