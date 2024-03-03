@@ -6,11 +6,10 @@ package com.iisc.csa.pods.projects.wallet.repository;
 
 import com.iisc.csa.pods.projects.wallet.model.Wallet;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.JpaRepository;
+
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 
@@ -30,8 +29,7 @@ public class WalletRepository {
     }
 
     public Wallet findByUser_id(Integer id){
-        Wallet wallet = (Wallet) entityManager.find(Wallet.class, id);
-        return wallet;
+        return entityManager.find(Wallet.class, id);
     }
 
     @Transactional
@@ -51,11 +49,7 @@ public class WalletRepository {
     }
 
     public boolean existsByUser_id(Integer id) {
-        Wallet wallet = findByUser_id(id);
-        if (wallet != null){
-            return true;
-        }
-        return false;
+        return findByUser_id(id) != null;
     }
 }
 
