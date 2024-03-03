@@ -40,7 +40,7 @@ minikube kubectl -- expose deployment walletservice --type=LoadBalancer --port=8
 
 
 # Wait for sometime for deployments to be running 
-sleep 20
+sleep 60
 
 #setup port forwarding
 minikube kubectl port-forward service/userservice 8080:8080  & PID_PF1="$!"
@@ -51,3 +51,5 @@ sleep 3
 echo "Running test case.."
 # Run the test cases
 python tests/test_case_1.py
+
+./teardown.sh
