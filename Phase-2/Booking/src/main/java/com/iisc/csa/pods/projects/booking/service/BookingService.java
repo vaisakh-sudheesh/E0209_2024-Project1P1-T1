@@ -44,24 +44,24 @@ public class BookingService {
      *
      * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
      */
-    @Value("${DOCKER_URL_USER:localhost}")
+    @Value("${DOCKER_URL_USER:localhost:8080}")
     private String uriStrngUsers;
 
-    @Value("${DOCKER_URL_WALLET:localhost}")
+    @Value("${DOCKER_URL_WALLET:localhost:8082}")
     private String uriStrngWallet;
 
     /**
      * Helper methods and fields for user microservice URI
      */
     private String getUserCheckUri() {
-        return "http://"+uriStrngUsers+":8080/users/{user_id}";
+        return "http://"+uriStrngUsers+"/users/{user_id}";
     }
 
     /**
      * Helper methods and fields for wallet microservice URI
      */
     private String getWalletUserCheckUri () {
-        return "http://"+uriStrngWallet+":8082/wallets/{user_id}";
+        return "http://"+uriStrngWallet+"/wallets/{user_id}";
     }
 
     ////////////////////////////////////// Service methods //////////////////////////////////////

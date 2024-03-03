@@ -31,14 +31,14 @@ public class WalletService {
      *
      * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
      */
-    @Value("${DOCKER_URL_USER:localhost}")
+    @Value("${DOCKER_URL_USER:localhost:8080}")
     private String uriStrngUser;
 
     /**
      * Helper methods and fields for user microservice URI
      */
     private String getUserCheckUri(){
-        return "http://"+uriStrngUser+":8080/" + "users/{user_id}";
+        return "http://"+uriStrngUser+"/" + "users/{user_id}";
     }
 
     ////////////////////////////////////// Service Methods //////////////////////////////////////

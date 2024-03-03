@@ -34,29 +34,23 @@ public class UserService {
      *
      * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
      */
-    @Value("${DOCKER_URL_WALLET:localhost}")
+    @Value("${DOCKER_URL_WALLET:localhost:8082}")
     private String uriStrngWallet;
 
-    @Value("${DOCKER_URL_USER:localhost}")
+    @Value("${DOCKER_URL_USER:localhost:8080}")
     private String uriStrngUser;
 
     /**
      * Helper methods and fields for wallet microservice URI
      */
     String getWalletUriBase (){
-        return "http://"+uriStrngWallet+":8082/wallets/";
+        return "http://"+uriStrngWallet+"/wallets/";
     }
 
     String getUserWalletDeleteUri(){
         return getWalletUriBase() + "{user_id}";
     }
 
-    /**
-     * Helper methods and fields for booking microservice URI
-     */
-    String getUserBookingDeleteUri() {
-        return "http://"+uriStrngUser+":8081/bookings/users/{user_id}";
-    }
 
     ////////////////////////////////////// Service Methods //////////////////////////////////////
 
@@ -122,6 +116,7 @@ public class UserService {
             Map<String, String> params = new HashMap<String, String>();
             RestTemplate restTemplate = new RestTemplate();
             params.put("user_id", user_id.toString());
+            System.out.println("DeleteUserBookings: Issuing delete: "+ getUserWalletDeleteUri());
             restTemplate.delete (getUserWalletDeleteUri(), params);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().is4xxClientError()) {
@@ -145,6 +140,7 @@ public class UserService {
             Map<String, String> params = new HashMap<String, String>();
             RestTemplate restTemplate = new RestTemplate();
             params.put("user_id", user_id.toString());
+            System.out.println("DeleteUserWallets: Issuing delete: "+ getUserWalletDeleteUri());
             restTemplate.delete (getUserWalletDeleteUri(), params);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().is4xxClientError()) {
