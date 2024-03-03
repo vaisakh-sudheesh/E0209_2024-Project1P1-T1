@@ -1,5 +1,4 @@
 FROM openjdk:17-jdk
-EXPOSE 8080
 
 # Setup working directory
 WORKDIR /app
