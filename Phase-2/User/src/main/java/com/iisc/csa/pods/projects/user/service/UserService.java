@@ -122,7 +122,7 @@ public class UserService {
             Map<String, String> params = new HashMap<String, String>();
             RestTemplate restTemplate = new RestTemplate();
             params.put("user_id", user_id.toString());
-            restTemplate.delete (getUserBookingDeleteUri(), params);
+            restTemplate.delete (getUserWalletDeleteUri(), params);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().is4xxClientError()) {
                 System.out.println("DeleteUserBookings failed" +e.getStatusCode());

@@ -17,9 +17,3 @@ Project-1/Phase-2 directory for E0209-Principles of Distributed Software Vaisakh
   - Makde use of profiles feature in Springboot where in two properties files are maintained *application.properties*  and *application-docker.properties* which will be picke by build system . Dockerfile will select the appropriate files during build
   - Further more, for URL mapping between developer, docker and minikube environments, two docker files (*Dockerfile.minikube* and *Dockerfile*) are maintained with environment variables of format *DOCKER_URL_* which will be picked in source code for issuing rest API calls between services.
 
-
-## BUGS Observed
-- UserService seems to be encountering Timeout Exception after first set of test cases.
-  - Except for this port, rest of the ports are functional.
-  - This behaviour is only happening for minikube execution.
-  - For docker and normal execution, this problem does not occur.
