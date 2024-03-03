@@ -7,12 +7,14 @@ import com.iisc.csa.pods.projects.wallet.model.WalletPutPayload;
 import com.iisc.csa.pods.projects.wallet.repository.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class WalletService {
     @Autowired
     WalletRepository walletRepo;
@@ -42,16 +44,15 @@ public class WalletService {
     }
 
     ////////////////////////////////////// Service Methods //////////////////////////////////////
-    @Transactional
     public Wallet getUser_id(Integer user_id) {
         if (!walletRepo.existsByUser_id(user_id)) {
-            throw new WalletOperationException("getUser_id", "wallet for user-id "+ user_id+" not found");
+            throw new UserValidationException(user_id);
         }
         return walletRepo.findByUser_id(user_id);
     }
 
-    @Transactional
-    public Wallet transact(WalletPutPayload payload, Integer user_id){
+    public synchronized Wallet transact(WalletPutPayload payload, Integer user_id){
+        //System.out.print("Wallet: transact( "+user_id+","+payload.getAmount()+","+payload.getAction()+")");
         /*
          * Check if wallet exists or no; this may not be necessary but in case some other module or a direct API
          * call comes, a sanity check is desirable.
@@ -70,6 +71,7 @@ public class WalletService {
                 }
             }
             /* Create wallet account and load the amount and continue with rest of the operation */
+            //System.out.println("transact: New wallet account creation ");
             Wallet newWallet = new Wallet(user_id,0);
             this.walletRepo.save(newWallet);
         }
@@ -90,20 +92,20 @@ public class WalletService {
         }
 
         /* Update record and return JSON payload with HTTP/OK status */
+        //System.out.println("transact: Updating existing wallet ");
         this.walletRepo.save(existingWallet);
+        //System.out.println("Wallet: transact( "+user_id+","+payload.getAmount()+","+payload.getAction()+") complete");
         return existingWallet;
     }
 
-    @Transactional
-    public void deleteUser_id (Integer user_id) {
+    public synchronized void deleteUser_id (Integer user_id) {
         if (!this.walletRepo.existsByUser_id(user_id)){
             throw new UserValidationException(user_id);
         }
         this.walletRepo.deleteByUser_id(user_id);
     }
 
-    @Transactional
-    public void deleteAll () {
+    public synchronized void deleteAll () {
         this.walletRepo.deleteAll();
     }
 }

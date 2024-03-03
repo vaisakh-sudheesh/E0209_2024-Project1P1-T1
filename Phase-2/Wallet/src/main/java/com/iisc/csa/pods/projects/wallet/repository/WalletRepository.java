@@ -5,25 +5,57 @@
 package com.iisc.csa.pods.projects.wallet.repository;
 
 import com.iisc.csa.pods.projects.wallet.model.Wallet;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface WalletRepository extends JpaRepository<Wallet, Integer> {
-    @Override
-    <S extends Wallet> S save (S entity);
+import javax.persistence.PersistenceContext;
 
-    @Query("SELECT b FROM Wallet b WHERE b.user_id = :id")
-    Wallet findByUser_id(Integer id);
+@Repository
+public class WalletRepository {
+    @PersistenceContext
+    @Autowired
+    private EntityManager entityManager;
 
     @Transactional
-    @Modifying
-    @Query("DELETE FROM Wallet b WHERE b.user_id = :id")
-    void deleteByUser_id(Integer id);
+    public <S extends Wallet> S save (S entity) {
+        entityManager.persist(entity);
+        entityManager.flush();
+        return entity;
+    }
 
-    @Query("SELECT CASE WHEN count(b) > 0 THEN true ELSE false END FROM Wallet b where b.user_id = ?1")
-    boolean existsByUser_id(Integer id);
+    public Wallet findByUser_id(Integer id){
+        Wallet wallet = (Wallet) entityManager.find(Wallet.class, id);
+        return wallet;
+    }
+
+    @Transactional
+    @Modifying(clearAutomatically=true, flushAutomatically=true)
+    public void deleteByUser_id(Integer id) {
+        Wallet wallet = findByUser_id(id);
+        if (wallet != null){
+            entityManager.remove(wallet);
+        }
+    }
+
+    @Transactional
+    @Modifying(clearAutomatically=true, flushAutomatically=true)
+    public void deleteAll() {
+        Query query = entityManager.createQuery("DELETE FROM Wallet");
+        query.executeUpdate();
+    }
+
+    public boolean existsByUser_id(Integer id) {
+        Wallet wallet = findByUser_id(id);
+        if (wallet != null){
+            return true;
+        }
+        return false;
+    }
 }
+
