@@ -27,20 +27,14 @@ public class WalletService {
      *
      * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
      */
-    @Value("${DOCKER_RUNNING:No}")
-    private String dockerStatus;
+    @Value("${DOCKER_URL_USER:localhost}")
+    private String uriStrngUser;
 
     /**
      * Helper methods and fields for user microservice URI
      */
-    private String getUserUriBase(){
-
-        String user_uri_docker = "http://host.docker.internal:8080/";
-        String user_uri_localdev = "http://localhost:8080/";
-        return (dockerStatus.equals("Yes") ? user_uri_docker : user_uri_localdev) ;
-    }
     private String getUserCheckUri(){
-        return getUserUriBase() + "users/{user_id}";
+        return "http://"+uriStrngUser+":8080/" + "users/{user_id}";
     }
 
     ////////////////////////////////////// Service Methods //////////////////////////////////////

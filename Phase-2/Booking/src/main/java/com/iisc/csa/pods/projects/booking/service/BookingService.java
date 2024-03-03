@@ -38,32 +38,24 @@ public class BookingService {
      *
      * Two are maintained, as both docker and non-docker invocation of service will have different URIs.
      */
-    @Value("${DOCKER_RUNNING:No}")
-    private String dockerStatus;
+    @Value("${DOCKER_URL_USER:localhost}")
+    private String uriStrngUsers;
+
+    @Value("${DOCKER_URL_WALLET:localhost}")
+    private String uriStrngWallet;
 
     /**
      * Helper methods and fields for user microservice URI
      */
-    private String getUserUriBase(){
-        String user_uri_docker = "http://host.docker.internal:8080/";
-        String user_uri_localdev = "http://localhost:8080/";
-        return (dockerStatus.equals("Yes") ? user_uri_docker : user_uri_localdev) ;
-    }
     private String getUserCheckUri() {
-        return getUserUriBase() + "users/{user_id}";
+        return "http://"+uriStrngUsers+":8080/users/{user_id}";
     }
 
     /**
      * Helper methods and fields for wallet microservice URI
      */
-    private String getWalletUriBase (){
-
-        String wallet_uri_docker = "http://host.docker.internal:8082/";
-        String wallet_uri_localdev = "http://localhost:8082/";
-        return (dockerStatus.equals("Yes") ? wallet_uri_docker : wallet_uri_localdev);
-    }
     private String getWalletUserCheckUri () {
-        return getWalletUriBase() + "wallets/{user_id}";
+        return "http://"+uriStrngWallet+":8082/wallets/{user_id}";
     }
 
     ////////////////////////////////////// Service methods //////////////////////////////////////
