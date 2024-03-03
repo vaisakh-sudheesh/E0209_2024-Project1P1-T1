@@ -1,6 +1,6 @@
 #!/bin/bash
 
-minikube start
+# minikube start
 eval $(minikube docker-env)
 
 
@@ -32,14 +32,14 @@ minikube kubectl -- expose deployment userservice --type=LoadBalancer --port=808
 minikube kubectl -- create deployment bookingdbservice --image=vaisakhp/booking-database-service:v1
 minikube kubectl -- expose deployment bookingdbservice --type=LoadBalancer --port=8084
 
-minikube kubectl -- create deployment bookingservice --image=vaisakhp/booking-service:v1
+minikube kubectl -- create deployment bookingservice --image=vaisakhp/booking-service:v1 --replicas=3
 minikube kubectl -- expose deployment bookingservice --type=LoadBalancer --port=8080
 
 minikube kubectl -- create deployment walletservice --image=vaisakhp/wallet-service:v1
 minikube kubectl -- expose deployment walletservice --type=LoadBalancer --port=8080
+minikube tunnel
 
-
-# Wait for sometime for deployments to be running 
+# Wait for sometime for deployments to be running
 sleep 60
 
 #setup port forwarding
@@ -52,4 +52,4 @@ echo "Running test case.."
 # Run the test cases
 python tests/test_case_1.py
 
-./teardown.sh
+bash ./teardown.sh
