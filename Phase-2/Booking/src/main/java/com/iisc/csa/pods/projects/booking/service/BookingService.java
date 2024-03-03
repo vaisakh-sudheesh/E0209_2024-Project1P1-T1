@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class BookingService {
     // Repository instances for accessing theatre, shows and booking entities
     @Autowired
@@ -63,13 +65,22 @@ public class BookingService {
     }
 
     ////////////////////////////////////// Service methods //////////////////////////////////////
+
+    /**
+     * Method to obtain list of theatres
+     * @return List of theatres
+     */
     @Transactional
     public List<Theatre> getTheatres() {
         List<Theatre> theatres = this.theatreRepository.findAll();
         return theatres;
     }
 
-    @Transactional
+    /**
+     * Method to obtain list of shows from theatre
+     * @param theater_id theatre id
+     * @return list of shows
+     */
     public List<Show> getShowsTheatres (Integer theater_id) {
         // Check for validity of provided theatre_id
         if (!this.theatreRepository.existsById(theater_id)) {
@@ -78,7 +89,11 @@ public class BookingService {
         return this.showRepository.findByTheatre_id(theater_id);
     }
 
-    @Transactional
+    /**
+     * Method to obtain show information
+     * @param show_id show id
+     * @return Show information
+     */
     public Show getShows (Integer show_id) {
         // Check for validity of show_id prior to fetching details
         if (!this.showRepository.existsById(show_id)) {
@@ -87,12 +102,20 @@ public class BookingService {
         return this.showRepository.findByShowId(show_id);
     }
 
-    @Transactional
+    /**
+     * Method to obtain Booking information of a user
+     *
+     * @param user_id user id to be queried
+     * @return List of booking
+     */
     public List<Booking> getBookingsUsers(Integer user_id) {
         return this.bookingRepository.findByUser_id(user_id);
     }
 
-    @Transactional
+    /**
+     * Transaction method to inssue booking request and communicate to other services too
+     * @param bookingreq Booking request information
+     */
     public void transact(BookingPayload bookingreq){
 
         // Check for validity of show_id
@@ -143,7 +166,10 @@ public class BookingService {
         this.showRepository.save(show_details);
     }
 
-    @Transactional
+    /**
+     * Method to delete bookings from a user
+     * @param user_id
+     */
     public void deleteUsers(Integer user_id) {
         // Sanity check for the user_id parameter
         if (!this.bookingRepository.existsByUser_id(user_id)){
@@ -166,7 +192,11 @@ public class BookingService {
         //this.bookingRepository.deleteAllByUser_id(user_id);
     }
 
-    @Transactional
+    /**
+     * Method to delete booking from user for a given show
+     * @param user_id
+     * @param show_id
+     */
     public void deleteUsersShows(Integer user_id, Integer show_id){
         Show show = this.showRepository.findByShowId(show_id);
 
@@ -193,7 +223,9 @@ public class BookingService {
 
     }
 
-    @Transactional
+    /**
+     * Delete all the bookings
+     */
     public void deleteBookings (){
         List<Booking> bookings = this.bookingRepository.findAll();
         for (Booking booking : bookings) {
