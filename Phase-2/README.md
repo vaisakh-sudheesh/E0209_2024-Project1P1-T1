@@ -19,4 +19,7 @@ Project-1/Phase-2 directory for E0209-Principles of Distributed Software Vaisakh
 
 
 ## BUGS Observed
-- 
+- UserService seems to be encountering Timeout Exception after first set of test cases.
+  - Except for this port, rest of the ports are functional.
+  - This behaviour is only happening for minikube execution.
+  - For docker and normal execution, this problem does not occur.
