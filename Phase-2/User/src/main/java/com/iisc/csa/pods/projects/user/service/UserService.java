@@ -37,8 +37,8 @@ public class UserService {
     @Value("${DOCKER_URL_WALLET:localhost:8082}")
     private String uriStrngWallet;
 
-    @Value("${DOCKER_URL_USER:localhost:8080}")
-    private String uriStrngUser;
+    @Value("${DOCKER_URL_BOOKING:localhost:8080}")
+    private String uriStrngBooking;
 
     /**
      * Helper methods and fields for wallet microservice URI
@@ -49,6 +49,14 @@ public class UserService {
 
     String getUserWalletDeleteUri(){
         return getWalletUriBase() + "{user_id}";
+    }
+
+    String getBookingUriBase (){
+        return "http://"+uriStrngBooking+"/wallets/";
+    }
+
+    String getUserBookingDeleteUri(){
+        return getBookingUriBase() + "{user_id}";
     }
 
 
@@ -116,8 +124,8 @@ public class UserService {
             Map<String, String> params = new HashMap<String, String>();
             RestTemplate restTemplate = new RestTemplate();
             params.put("user_id", user_id.toString());
-            System.out.println("DeleteUserBookings: Issuing delete: "+ getUserWalletDeleteUri());
-            restTemplate.delete (getUserWalletDeleteUri(), params);
+            System.out.println("DeleteUserBookings: Issuing delete: "+ getUserBookingDeleteUri());
+            restTemplate.delete (getUserBookingDeleteUri(), params);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().is4xxClientError()) {
                 System.out.println("DeleteUserBookings failed" +e.getStatusCode());

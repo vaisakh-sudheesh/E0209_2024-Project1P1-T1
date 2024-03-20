@@ -23,7 +23,7 @@ popd
 
 printf "\n\n\t\t ==== Starting containers === "
 printf "\n ## Starting vaisakhp-booking-database ## "
-docker run -p 8084:8084 --detach --rm --name vaisakhp-booking-database --add-host=host.docker.internal:host-gateway vaisakhp/booking-database-service:v1
+docker run -p 8084:8084 -p 8083:8083 --detach --rm --name vaisakhp-booking-database --add-host=host.docker.internal:host-gateway vaisakhp/booking-database-service:v1
 
 printf "\n ## Starting vaisakhp-user ## "
 docker run -p 8080:8080 --detach --rm --name vaisakhp-user --add-host=host.docker.internal:host-gateway vaisakhp/user-service:v1
@@ -49,16 +49,24 @@ sleep 5
 printf "\n ## TC3 - Phase 1 : Serial  test_case_1.py ## "
 python tests/phase-1_tcs/test_case_1.py
 sleep 5
+python tests/phase-1_tcs/test_case_1.py
+sleep 5
 
 printf "\n ## TC4 - Phase 1 : Serial  test_case_2.py ## "
+python tests/phase-1_tcs/test_case_2.py
+sleep 5
 python tests/phase-1_tcs/test_case_2.py
 sleep 5
 
 printf "\n ## TC5 - Phase 1 : Serial  test_case_3.py ## "
 python tests/phase-1_tcs/test_case_3.py
 sleep 5
+python tests/phase-1_tcs/test_case_3.py
+sleep 5
 
 printf "\n ## TC6 - Phase 1 : Serial  custtc_1-userservice.py ## "
+python tests/phase-1_tcs/custtc_1-userservice.py
+sleep 5
 python tests/phase-1_tcs/custtc_1-userservice.py
 sleep 5
 
@@ -66,10 +74,12 @@ sleep 5
 printf "\n ## TC6 - Phase 1 : Serial  custtc_2-walletservice.py ## "
 python tests/phase-1_tcs/custtc_2-walletservice.py
 sleep 5
+python tests/phase-1_tcs/custtc_2-walletservice.py
+sleep 5
 
 
 printf "\n\n\t\t ==== Cleaning docker files === "
 ### Tear down
-docker stop vaisakhp-booking-database vaisakhp-user vaisakhp-wallet vaisakhp-booking 
+docker stop vaisakhp-booking-database vaisakhp-user vaisakhp-wallet vaisakhp-booking
 docker image rm -f vaisakhp/booking-database-service:v1 vaisakhp/booking-service:v1 vaisakhp/wallet-service:v1 vaisakhp/user-service:v1
 

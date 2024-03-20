@@ -10,6 +10,6 @@ COPY pom.xml /app/pom.xml
 # Environment variable used in code to detect Docker/Non-docker execution
 ENV DOCKER_RUNNING=Yes
 ENV DOCKER_URL_USER="userservice:8080"
-ENV DOCKER_URL_BOOKINGDB="bookingdbservice:8080"
+ENV DOCKER_URL_BOOKINGDB="bookingdbservice:8084"
 ENV DOCKER_URL_WALLET="walletservice:8080"
 ENTRYPOINT ["./mvnw", "-Dspring-boot.run.arguments=\"--spring.profiles.active=docker\"", "spring-boot:run"]

@@ -39,7 +39,7 @@ minikube kubectl -- expose deployment userservice --type=LoadBalancer --port=808
 
 printf "\n ## Starting bookingdbservice ## "
 minikube kubectl -- create deployment bookingdbservice --image=vaisakhp/booking-database-service:v1
-minikube kubectl -- expose deployment bookingdbservice --type=LoadBalancer --port=8084  --target-port=8084
+minikube kubectl -- expose deployment bookingdbservice --type=ClusterIP --port=8084
 
 printf "\n ## Starting bookingservice ## "
 minikube kubectl -- create deployment bookingservice --image=vaisakhp/booking-service:v1 --replicas=3
@@ -73,16 +73,24 @@ sleep 5
 printf "\n ## TC3 - Phase 1 : Serial  test_case_1.py ## "
 python tests/phase-1_tcs/test_case_1.py
 sleep 5
+python tests/phase-1_tcs/test_case_1.py
+sleep 5
 
 printf "\n ## TC4 - Phase 1 : Serial  test_case_2.py ## "
+python tests/phase-1_tcs/test_case_2.py
+sleep 5
 python tests/phase-1_tcs/test_case_2.py
 sleep 5
 
 printf "\n ## TC5 - Phase 1 : Serial  test_case_3.py ## "
 python tests/phase-1_tcs/test_case_3.py
 sleep 5
+python tests/phase-1_tcs/test_case_3.py
+sleep 5
 
 printf "\n ## TC6 - Phase 1 : Serial  custtc_1-userservice.py ## "
+python tests/phase-1_tcs/custtc_1-userservice.py
+sleep 5
 python tests/phase-1_tcs/custtc_1-userservice.py
 sleep 5
 
@@ -90,5 +98,6 @@ sleep 5
 printf "\n ## TC6 - Phase 1 : Serial  custtc_2-walletservice.py ## "
 python tests/phase-1_tcs/custtc_2-walletservice.py
 sleep 5
-
+python tests/phase-1_tcs/custtc_2-walletservice.py
+sleep 5
 #bash ./teardown.sh
